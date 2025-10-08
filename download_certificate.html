@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Download Certificate - Certificate System</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --bg:#f8f9fa; --text:#202124; --muted:#5f6368; --border:#e0e0e0; --primary:#1a73e8; --primary-hover:#1669c1; }
+        * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; padding: 16px; background: var(--bg); color: var(--text); font-family: 'Roboto', Arial, sans-serif; }
+    /* Navbar (shared) */
+    .navbar { background: #fff; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+    .nav-container { max-width: 1100px; margin: 0 auto; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; }
+    .logo { color: var(--text); text-decoration: none; font-weight: 500; }
+    .nav-links { display: flex; gap: 8px; }
+    .nav-links a { color: var(--text); text-decoration: none; padding: 8px 12px; border-radius: 4px; }
+    .nav-links a:hover { background: #f1f3f4; }
+    .hamburger { display: none; flex-direction: column; cursor: pointer; padding: 8px; }
+    .hamburger span { width: 20px; height: 2px; background: var(--text); margin: 2px 0; transition: 0.3s; }
+    .hamburger.active span:nth-child(1) { transform: rotate(-45deg) translate(-5px, 6px); }
+    .hamburger.active span:nth-child(2) { opacity: 0; }
+    .hamburger.active span:nth-child(3) { transform: rotate(45deg) translate(-5px, -6px); }
+    @media (max-width: 768px) { 
+        .nav-links { 
+            display: none; 
+            position: absolute; 
+            top: 100%; 
+            left: 0; 
+            right: 0; 
+            background: #fff; 
+            flex-direction: column; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+            border-top: 1px solid var(--border); 
+            padding: 8px 0; 
+        }
+        .nav-links.active { display: flex; }
+        .nav-links a { margin: 0 16px; padding: 12px 0; border-bottom: 1px solid #f1f3f4; }
+        .nav-links a:last-child { border-bottom: none; }
+        .hamburger { display: flex; }
+        .nav-container { position: relative; }
+    }
+        .container { max-width: 960px; margin: 0 auto; background: #fff; border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+        .header { background: #fff; border-bottom: 1px solid var(--border); color: var(--text); padding: 20px; text-align: center; }
+        .header h1 { font-size: 22px; margin: 0 0 6px; font-weight: 500; }
+        .header p { margin: 0; color: var(--muted); font-size: 14px; }
+        .download-section { padding: 24px; }
+        .reference-input-section { text-align: center; margin-bottom: 24px; }
+        .input-group { max-width: 480px; margin: 0 auto; }
+        .input-group label { display: block; margin-bottom: 6px; color: var(--text); font-size: 13px; font-weight: 500; }
+        .reference-input { width: 100%; padding: 12px; border: 1px solid #dadce0; border-radius: 4px; font-size: 16px; text-align: center; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Courier New', monospace; letter-spacing: 1.5px; text-transform: uppercase; }
+        .reference-input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(26,115,232,.15); }
+        .verify-btn { background: var(--primary); color: #fff; border: none; padding: 10px 16px; border-radius: 4px; font-size: 14px; font-weight: 500; cursor: pointer; margin-top: 12px; }
+        .verify-btn:hover { background: var(--primary-hover); }
+        .verify-btn:disabled { opacity: .6; cursor: not-allowed; }
+        .loading { display: none; text-align: center; margin: 16px 0; }
+        .loading.show { display: block; }
+        .spinner { border: 3px solid #f1f3f4; border-top: 3px solid var(--primary); border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; margin: 0 auto 8px; }
+        @keyframes spin { from {transform: rotate(0)} to {transform: rotate(360deg)} }
+        .message { display: none; padding: 12px; border: 1px solid var(--border); border-radius: 6px; margin: 16px 0; font-size: 14px; text-align: center; }
+        .message.show { display: block; }
+        .message.success { border-color:#c8e6c9; background:#f1f8e9; color:#1b5e20; }
+        .message.error { border-color:#f8c7c7; background:#fdecec; color:#8a1f1f; }
+        .certificate-details { background:#fff; border:1px solid var(--border); border-radius:8px; padding:16px; margin:16px 0; display:none; }
+        .certificate-details.show { display:block; }
+        .certificate-details h3 { margin:0 0 12px; font-size:16px; font-weight:500; text-align:center; }
+        .details-grid { display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:12px; margin-bottom: 12px; }
+        .detail-item { background:#fff; padding:12px; border-radius:6px; border:1px solid var(--border); }
+        .detail-item label { display:block; font-size:12px; color: var(--muted); margin-bottom:4px; }
+        .detail-item span { color: var(--text); font-size: 14px; font-weight: 500; }
+        .certificate-preview { text-align:center; margin: 16px 0; display:none; }
+        .certificate-preview.show { display:block; }
+        .preview-canvas { border:1px solid var(--border); border-radius: 6px; max-width: 100%; height: auto; }
+        .download-controls { text-align:center; margin: 16px 0; display:none; }
+        .download-controls.show { display:block; }
+        .download-btn { background:#188038; color:#fff; border:0; padding:10px 16px; border-radius:4px; font-size:14px; font-weight:500; cursor:pointer; margin: 0 6px; text-decoration:none; display:inline-block; }
+        .download-btn:hover { background:#146c31; }
+        .download-btn.pdf { background:#d93025; }
+        .download-btn.pdf:hover { background:#b1271c; }
+        .back-link { display:inline-block; color: var(--primary); text-decoration: none; margin: 16px 0; font-weight: 500; }
+        .back-link:hover { text-decoration: underline; }
+        .footer { text-align:center; padding: 16px; color: var(--muted); border-top: 1px solid var(--border); background: #fff; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">🏆 Certificate System</a>
+            <div class="nav-links" id="navLinks">
+                <a href="login.html">Student Login</a>
+                <a href="download_certificate.html">Download</a>
+                <a href="admin.html">Admin Tools</a>
+            </div>
+            <div class="hamburger" id="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container" style="margin-top: 16px;">
+        <div class="header">
+            <h1>📥 Download Certificate</h1>
+            <p>Enter your certificate number to download your certificate</p>
+        </div>
+        
+        <div class="download-section">
+            <div class="reference-input-section">
+                <div class="input-group">
+                    <label for="referenceId">Certificate Number</label>
+                    <input type="text" id="referenceId" class="reference-input" placeholder="CERT-XXXXX-XXXXX" maxlength="20">
+                    <br>
+                    <button type="button" class="verify-btn" onclick="verifyReferenceId()">
+                        🔍 Verify & Load Certificate
+                    </button>
+                </div>
+            </div>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Verifying your certificate number...</p>
+            </div>
+            
+            <div class="message" id="message"></div>
+            
+            <div class="certificate-details" id="certificateDetails">
+                <h3>✅ Certificate Found!</h3>
+                <div class="details-grid" id="detailsGrid">
+                    <!-- Details will be populated by JavaScript -->
+                </div>
+            </div>
+            
+            <div class="certificate-preview" id="certificatePreview">
+                <h3>📋 Certificate Preview</h3>
+                <canvas id="previewCanvas" class="preview-canvas" width="1123" height="794"></canvas>
+            </div>
+            
+            <div class="download-controls" id="downloadControls">
+                <button class="download-btn" onclick="downloadCertificate('png')">
+                    📥 Download PNG
+                </button>
+                <button class="download-btn pdf" onclick="downloadCertificate('pdf')">
+                    📄 Download PDF
+                </button>
+            </div>
+            
+            <div style="text-align: center; margin-top: 40px;">
+                <a href="login.html" class="back-link">← Back to Login</a>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Certificate System © 2025 | Secure Download Portal</p>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
+        // Hamburger menu functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const hamburger = document.getElementById('hamburger');
+            const navLinks = document.getElementById('navLinks');
+            
+            if (hamburger && navLinks) {
+                hamburger.addEventListener('click', function() {
+                    hamburger.classList.toggle('active');
+                    navLinks.classList.toggle('active');
+                });
+                
+                // Close menu when clicking a link
+                navLinks.addEventListener('click', function(e) {
+                    if (e.target.tagName === 'A') {
+                        hamburger.classList.remove('active');
+                        navLinks.classList.remove('active');
+                    }
+                });
+            }
+        });
+
+        let currentCertificateData = null;
+        
+        // Auto-fill reference ID from URL parameter
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const refId = urlParams.get('ref');
+            if (refId) {
+                document.getElementById('referenceId').value = refId;
+                verifyReferenceId();
+            }
+        };
+
+        function verifyReferenceId() {
+            const referenceId = document.getElementById('referenceId').value.trim().toUpperCase();
+            
+            if (!referenceId) {
+                showMessage('Please enter a certificate number', 'error');
+                return;
+            }
+
+            if (referenceId.length < 10) {
+                showMessage('Please enter a valid certificate number', 'error');
+                return;
+            }
+
+            showLoading(true);
+            hideMessage();
+            hideCertificateDetails();
+
+            // Call Node.js API to verify reference ID
+            fetch(`/api/get_certificate?reference_id=${encodeURIComponent(referenceId)}`)
+            .then(response => response.json())
+            .then(data => {
+                showLoading(false);
+
+                if (data.success) {
+                    currentCertificateData = data.data;
+                    showCertificateDetails(data.data);
+                    generateCertificatePreview(data.data);
+                    showMessage('✅ Certificate number verified! Your certificate is ready to download.', 'success');
+                } else {
+                    showMessage('❌ ' + (data.error || 'Invalid certificate number. Please check and try again.'), 'error');
+                }
+            })
+            .catch(error => {
+                showLoading(false);
+                console.error('Error:', error);
+                showMessage('❌ Connection error. Please try again later.', 'error');
+            });
+        }
+
+        function markAsDownloaded(referenceId) {
+            // Mark certificate as downloaded in the backend
+            fetch('/api/mark_downloaded', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    reference_id: referenceId
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    console.log('Download status updated successfully');
+                } else {
+                    console.error('Failed to update download status:', data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error updating download status:', error);
+            });
+        }
+
+        function showCertificateDetails(data) {
+            const detailsGrid = document.getElementById('detailsGrid');
+            const user = data.user;
+            
+            detailsGrid.innerHTML = `
+                <div class="detail-item">
+                    <label>Certificate Number:</label>
+                    <span>${data.id}</span>
+                </div>
+                <div class="detail-item">
+                    <label>Student Name:</label>
+                    <span>${user.name}</span>
+                </div>
+            `;
+            
+            document.getElementById('certificateDetails').classList.add('show');
+        }
+
+        function generateCertificatePreview(data) {
+            const canvas = document.getElementById('previewCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set canvas size
+            canvas.width = 1123;
+            canvas.height = 794;
+            
+            const img = new Image();
+            img.onload = function() {
+                // Clear and draw background
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                
+                // Text coordinates (matching the fixed version)
+                const textCoordinates = {
+                    certificateId: { x: 550, y: 260 },
+                    studentName: { x: 550, y: 403 }
+                };
+                
+                const user = data.user;
+                
+                // Set font properties
+                ctx.fillStyle = '#e9b72e';
+                ctx.textAlign = 'center';
+                
+                // Certificate Number (medium font, centered)
+                ctx.font = 'bold 24px "Times New Roman", Times, serif';
+                ctx.fillText(`Certificate No: ${data.id}`, textCoordinates.certificateId.x, textCoordinates.certificateId.y);
+                
+                // Student Name (large, centered)
+                ctx.font = 'bold 48px "Times New Roman", Times, serif';
+                ctx.fillText(user.name, textCoordinates.studentName.x, textCoordinates.studentName.y);
+                
+                // Show preview and download controls
+                document.getElementById('certificatePreview').classList.add('show');
+                document.getElementById('downloadControls').classList.add('show');
+            };
+            
+            img.onerror = function() {
+                showMessage('⚠️ Certificate preview unavailable, but download will work. Please ensure the background image is available.', 'error');
+                document.getElementById('downloadControls').classList.add('show');
+            };
+            
+            img.src = 'template.png';
+        }
+
+        function downloadCertificate(format) {
+            if (!currentCertificateData) {
+                showMessage('Please verify your certificate number first', 'error');
+                return;
+            }
+
+            const canvas = document.getElementById('previewCanvas');
+            const user = currentCertificateData.user;
+            const filename = `certificate_${user.name.replace(/\s+/g, '_')}_${Date.now()}`;
+
+            if (format === 'png') {
+                const link = document.createElement('a');
+                link.download = `${filename}.png`;
+                link.href = canvas.toDataURL('image/png', 1.0);
+                link.click();
+                
+                showMessage('📥 PNG certificate downloaded successfully!', 'success');
+            } else if (format === 'pdf') {
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF({
+                    orientation: 'landscape',
+                    unit: 'px',
+                    format: [1123, 794]
+                });
+                
+                const imgData = canvas.toDataURL('image/png', 1.0);
+                pdf.addImage(imgData, 'PNG', 0, 0, 1123, 794);
+                pdf.save(`${filename}.pdf`);
+                
+                showMessage('📄 PDF certificate downloaded successfully!', 'success');
+            }
+
+            // Mark as downloaded in backend
+            markAsDownloaded(currentCertificateData.id);
+        }
+
+        function showLoading(show) {
+            const loading = document.getElementById('loading');
+            if (show) {
+                loading.classList.add('show');
+            } else {
+                loading.classList.remove('show');
+            }
+        }
+
+        function showMessage(text, type) {
+            const message = document.getElementById('message');
+            message.textContent = text;
+            message.className = `message show ${type}`;
+        }
+
+        function hideMessage() {
+            const message = document.getElementById('message');
+            message.classList.remove('show');
+        }
+
+        function hideCertificateDetails() {
+            document.getElementById('certificateDetails').classList.remove('show');
+            document.getElementById('certificatePreview').classList.remove('show');
+            document.getElementById('downloadControls').classList.remove('show');
+        }
+
+        // Auto-format reference ID input
+        document.getElementById('referenceId').addEventListener('input', function(e) {
+            this.value = this.value.toUpperCase();
+        });
+
+        // Enter key support
+        document.getElementById('referenceId').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                verifyReferenceId();
+            }
+        });
+    </script>
+</body>
+</html>

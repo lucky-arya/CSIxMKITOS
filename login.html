@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certificate System - User Login</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #f8f9fa;
+            --text: #202124;
+            --muted: #5f6368;
+            --border: #e0e0e0;
+            --primary: #1a73e8;
+            --primary-hover: #1669c1;
+        }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            padding: 24px;
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Roboto', Arial, sans-serif;
+        }
+        /* Navbar (shared) */
+        .navbar { background: #fff; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+        .nav-container { max-width: 1100px; margin: 0 auto; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; }
+        .logo { color: var(--text); text-decoration: none; font-weight: 500; }
+        .nav-links { display: flex; gap: 8px; }
+        .nav-links a { color: var(--text); text-decoration: none; padding: 8px 12px; border-radius: 4px; }
+        .nav-links a:hover { background: #f1f3f4; }
+        .hamburger { display: none; flex-direction: column; cursor: pointer; padding: 8px; }
+        .hamburger span { width: 20px; height: 2px; background: var(--text); margin: 2px 0; transition: 0.3s; }
+        .hamburger.active span:nth-child(1) { transform: rotate(-45deg) translate(-5px, 6px); }
+        .hamburger.active span:nth-child(2) { opacity: 0; }
+        .hamburger.active span:nth-child(3) { transform: rotate(45deg) translate(-5px, -6px); }
+        @media (max-width: 768px) { 
+            .nav-links { 
+                display: none; 
+                position: absolute; 
+                top: 100%; 
+                left: 0; 
+                right: 0; 
+                background: #fff; 
+                flex-direction: column; 
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+                border-top: 1px solid var(--border); 
+                padding: 8px 0; 
+            }
+            .nav-links.active { display: flex; }
+            .nav-links a { margin: 0 16px; padding: 12px 0; border-bottom: 1px solid #f1f3f4; }
+            .nav-links a:last-child { border-bottom: none; }
+            .hamburger { display: flex; }
+            .nav-container { position: relative; }
+        }
+        .login-container {
+            width: 100%;
+            max-width: 440px;
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .login-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+        }
+        .login-header h1 {
+            margin: 0 0 4px;
+            font-size: 22px;
+            font-weight: 500;
+        }
+        .login-header p {
+            margin: 0;
+            color: var(--muted);
+            font-size: 14px;
+        }
+        .login-form { padding: 24px; }
+        .form-group { margin-bottom: 16px; }
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            color: var(--text);
+            font-size: 13px;
+            font-weight: 500;
+        }
+        .form-group input {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #dadce0;
+            border-radius: 4px;
+            font-size: 14px;
+            background: #fff;
+        }
+        .form-group input:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 2px rgba(26,115,232,0.15);
+        }
+        .submit-btn {
+            width: 100%;
+            background: var(--primary);
+            color: #fff;
+            border: 0;
+            padding: 10px 16px;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+        }
+        .submit-btn:hover { background: var(--primary-hover); }
+        .submit-btn:disabled { opacity: .6; cursor: not-allowed; }
+        .loading { display: none; text-align: center; margin: 16px 0; }
+        .loading.show { display: block; }
+        .spinner {
+            border: 3px solid #f1f3f4;
+            border-top: 3px solid var(--primary);
+            border-radius: 50%;
+            width: 24px; height: 24px; margin: 0 auto 8px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { from {transform: rotate(0)} to {transform: rotate(360deg)} }
+        .message { display: none; padding: 12px; border: 1px solid var(--border); border-radius: 6px; margin: 16px 0; font-size: 14px; }
+        .message.show { display: block; }
+        .message.success { border-color: #c8e6c9; background: #f1f8e9; color: #1b5e20; }
+        .message.error { border-color: #f8c7c7; background: #fdecec; color: #8a1f1f; }
+        .message.info { border-color: #cfe3ff; background: #eef4ff; color: #1a73e8; }
+        .reference-id { display: none; border: 1px solid var(--border); border-radius: 8px; padding: 16px; background: #fff; }
+        .reference-id.show { display: block; }
+        .reference-id h3 { margin: 0 0 8px; font-size: 16px; font-weight: 500; }
+        .reference-id .id-display {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Courier New', monospace;
+            font-size: 18px; font-weight: 700; color: var(--text);
+            border: 1px solid var(--border); border-radius: 6px; padding: 12px; background: #fff; letter-spacing: 1.5px;
+        }
+        .copy-btn { background: #1a73e8; color: #fff; border: 0; padding: 8px 12px; border-radius: 4px; font-size: 13px; cursor: pointer; }
+        .copy-btn:hover { background: #1669c1; }
+        .download-link { display: inline-block; margin-top: 12px; padding: 10px 16px; border: 1px solid var(--border); border-radius: 4px; color: var(--primary); text-decoration: none; font-weight: 500; }
+        .download-link:hover { background: #f6f9fe; border-color: #c6dafc; }
+        .footer { text-align: center; padding: 16px; color: var(--muted); border-top: 1px solid var(--border); background: #fff; }
+        .footer a { color: var(--primary); text-decoration: none; }
+        .footer a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">🏆 Certificate System</a>
+            <div class="nav-links" id="navLinks">
+                <a href="login.html">Student Login</a>
+                <a href="download_certificate.html">Download</a>
+                <a href="admin.html">Admin Tools</a>
+            </div>
+            <div class="hamburger" id="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="login-container" style="margin: 24px auto;">
+        <div class="login-header">
+            <h1>🏆 Certificate System</h1>
+            <p>Enter your credentials to get your certificate</p>
+        </div>
+        
+        <div class="login-form">
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="userName">Full Name</label>
+                    <input type="text" id="userName" name="userName" placeholder="Enter your full name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="userEmail">Email Address</label>
+                    <input type="email" id="userEmail" name="userEmail" placeholder="Enter your email address" required>
+                </div>
+                
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    🔍 Check Eligibility
+                </button>
+            </form>
+            
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p>Checking your credentials...</p>
+            </div>
+            
+            <div class="message" id="message"></div>
+            
+            <div class="reference-id" id="referenceIdSection">
+                <h3>🎉 Success! Your Certificate Number</h3>
+                <div class="id-display" id="referenceIdDisplay"></div>
+                <p><strong>Important:</strong> Save this certificate number to download your certificate</p>
+                <button class="copy-btn" onclick="copyReferenceId()">📋 Copy Number</button>
+                <br>
+                <a href="download_certificate.html" class="download-link">📥 Go to Download Page</a>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Need help? <a href="#" onclick="showHelp()">Contact Support</a></p>
+        </div>
+    </div>
+
+    <script>
+        // Hamburger menu functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const hamburger = document.getElementById('hamburger');
+            const navLinks = document.getElementById('navLinks');
+            
+            if (hamburger && navLinks) {
+                hamburger.addEventListener('click', function() {
+                    hamburger.classList.toggle('active');
+                    navLinks.classList.toggle('active');
+                });
+                
+                // Close menu when clicking a link
+                navLinks.addEventListener('click', function(e) {
+                    if (e.target.tagName === 'A') {
+                        hamburger.classList.remove('active');
+                        navLinks.classList.remove('active');
+                    }
+                });
+            }
+        });
+
+        // Form submission handler
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            checkCredentials();
+        });
+
+        function checkCredentials() {
+            const userName = document.getElementById('userName').value.trim();
+            const userEmail = document.getElementById('userEmail').value.trim();
+            
+            if (!userName || !userEmail) {
+                showMessage('Please fill in all fields', 'error');
+                return;
+            }
+
+            // Show loading
+            showLoading(true);
+            hideMessage();
+            hideReferenceId();
+
+            // Call Node.js API for credential verification
+            fetch('/api/verify_credentials', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    name: userName,
+                    email: userEmail
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                showLoading(false);
+
+                if (data.success) {
+                    const referenceId = data.reference_id;
+                    
+                    showReferenceId(referenceId);
+                    
+                    if (data.existing) {
+                        showMessage('✅ Welcome back! Your existing certificate number is displayed below. Created on: ' + new Date(data.created_date).toLocaleDateString(), 'success');
+                    } else {
+                        showMessage('✅ Credentials verified! Your new certificate number has been generated.', 'success');
+                    }
+                } else {
+                    showMessage('❌ ' + (data.error || 'Credentials not found. Please check your name and email address.'), 'error');
+                }
+            })
+            .catch(error => {
+                showLoading(false);
+                console.error('Error:', error);
+                showMessage('❌ Connection error. Please try again later.', 'error');
+            });
+        }
+
+        function showLoading(show) {
+            const loading = document.getElementById('loading');
+            const submitBtn = document.getElementById('submitBtn');
+            
+            if (show) {
+                loading.classList.add('show');
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Checking...';
+            } else {
+                loading.classList.remove('show');
+                submitBtn.disabled = false;
+                submitBtn.textContent = '🔍 Check Eligibility';
+            }
+        }
+
+        function showMessage(text, type) {
+            const message = document.getElementById('message');
+            message.textContent = text;
+            message.className = `message show ${type}`;
+        }
+
+        function hideMessage() {
+            const message = document.getElementById('message');
+            message.classList.remove('show');
+        }
+
+        function showReferenceId(id) {
+            const section = document.getElementById('referenceIdSection');
+            const display = document.getElementById('referenceIdDisplay');
+            display.textContent = id;
+            section.classList.add('show');
+        }
+
+        function hideReferenceId() {
+            const section = document.getElementById('referenceIdSection');
+            section.classList.remove('show');
+        }
+
+        function copyReferenceId() {
+            const referenceId = document.getElementById('referenceIdDisplay').textContent;
+            navigator.clipboard.writeText(referenceId).then(() => {
+                showMessage('📋 Reference ID copied to clipboard!', 'info');
+                setTimeout(hideMessage, 2000);
+            });
+        }
+
+        function showHelp() {
+            alert('For technical support, please contact:\n\nEmail: support@certificatesystem.com\nPhone: +1-234-567-8900\n\nOffice Hours: 9 AM - 5 PM (Mon-Fri)');
+        }
+
+        // Auto-fill demo data for testing
+        function fillDemoData() {
+            document.getElementById('userName').value = 'John Doe';
+            document.getElementById('userEmail').value = 'john.doe@example.com';
+        }
+
+        // Add demo button for testing
+        window.onload = function() {
+            if (window.location.search.includes('demo=true')) {
+                fillDemoData();
+            }
+        };
+    </script>
+</body>
+</html>

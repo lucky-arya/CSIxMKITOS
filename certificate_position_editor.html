@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certificate Position Editor - Drag & Drop Tool</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+        :root { --bg:#f8f9fa; --text:#202124; --muted:#5f6368; --border:#e0e0e0; --primary:#1a73e8; --primary-hover:#1669c1; --danger:#d93025; --success:#188038; }
+    body { font-family: 'Roboto', Arial, sans-serif; margin: 0; padding: 16px; background-color: var(--bg); color: var(--text); }
+    /* Navbar (shared) */
+    .navbar { background: #fff; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+    .nav-container { max-width: 1100px; margin: 0 auto; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; }
+    .logo { color: var(--text); text-decoration: none; font-weight: 500; }
+    .nav-links { display: flex; gap: 8px; }
+    .nav-links a { color: var(--text); text-decoration: none; padding: 8px 12px; border-radius: 4px; }
+    .nav-links a:hover { background: #f1f3f4; }
+    .hamburger { display: none; flex-direction: column; cursor: pointer; padding: 8px; }
+    .hamburger span { width: 20px; height: 2px; background: var(--text); margin: 2px 0; transition: 0.3s; }
+    .hamburger.active span:nth-child(1) { transform: rotate(-45deg) translate(-5px, 6px); }
+    .hamburger.active span:nth-child(2) { opacity: 0; }
+    .hamburger.active span:nth-child(3) { transform: rotate(45deg) translate(-5px, -6px); }
+    @media (max-width: 768px) { 
+        .nav-links { 
+            display: none; 
+            position: absolute; 
+            top: 100%; 
+            left: 0; 
+            right: 0; 
+            background: #fff; 
+            flex-direction: column; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+            border-top: 1px solid var(--border); 
+            padding: 8px 0; 
+        }
+        .nav-links.active { display: flex; }
+        .nav-links a { margin: 0 16px; padding: 12px 0; border-bottom: 1px solid #f1f3f4; }
+        .nav-links a:last-child { border-bottom: none; }
+        .hamburger { display: flex; }
+        .nav-container { position: relative; }
+    }
+        .container { max-width: 1100px; margin: 0 auto; background: #fff; padding: 16px; border-radius: 8px; border: 1px solid var(--border); }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 16px;
+        }
+        
+        .header h1 { color: var(--text); margin: 0 0 6px; font-weight: 500; font-size: 22px; }
+        .header p { color: var(--muted); margin: 0; font-size: 14px; }
+        
+        .form-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-group label { font-weight: 500; color: var(--text); margin-bottom: 6px; font-size: 13px; }
+        .form-group input { padding: 10px 12px; border: 1px solid #dadce0; border-radius: 4px; font-size: 14px; }
+        .form-group input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(26,115,232,.15); }
+        
+        .editor-section {
+            margin: 16px 0;
+            text-align: center;
+        }
+        
+        .certificate-editor {
+            position: relative;
+            display: inline-block;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            overflow: visible;
+            background: white;
+            margin: 20px;
+        }
+        
+        #editorCanvas {
+            max-width: 100%;
+            height: auto;
+            display: block;
+        }
+        
+        .draggable-text {
+            position: absolute;
+            font-family: "Times New Roman", Times, serif;
+            font-weight: bold;
+            color: #e9b72e;
+            cursor: move;
+            user-select: none;
+            padding: 4px 8px;
+            border: 1px dashed #e0e0e0;
+            border-radius: 4px;
+            background: rgba(255, 255, 255, 0.9);
+            transition: box-shadow 0.2s, transform 0.2s;
+            white-space: nowrap;
+            text-align: center;
+            transform: translateX(-50%); /* Center the element horizontally */
+        }
+        
+        .draggable-text:hover {
+            box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+            transform: translateX(-50%) scale(1.02);
+        }
+        
+        .draggable-text.dragging {
+            background: rgba(255, 255, 255, 1);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            z-index: 1000;
+            transform: translateX(-50%);
+        }
+        
+        .controls {
+            text-align: center;
+            margin: 12px 0;
+        }
+        
+        .btn { background: var(--primary); color: #fff; border: none; padding: 10px 16px; border-radius: 4px; font-size: 14px; cursor: pointer; margin: 0 6px; font-weight: 500; }
+        .btn:hover { background: var(--primary-hover); }
+        .btn.secondary { background: var(--success); }
+        .btn.secondary:hover { background: #146c31; }
+        .btn.danger { background: var(--danger); }
+        .btn.danger:hover { background: #b1271c; }
+        
+        .coordinates-output {
+            background: #fff;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 16px;
+            margin: 12px 0;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 360px;
+            overflow-y: auto;
+        }
+        
+        .coordinates-output h3 { margin-top: 0; color: var(--text); font-family: 'Roboto', Arial, sans-serif; font-weight: 500; font-size: 16px; }
+        
+        .coordinates-output pre { background: #ffffff; padding: 12px; border: 1px solid var(--border); border-radius: 4px; overflow-x: auto; white-space: pre-wrap; }
+        
+        .status {
+            text-align: center;
+            margin: 10px 0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .instructions { background: #f1f3f4; border: 1px solid var(--border); border-radius: 6px; padding: 12px; margin: 12px 0; }
+        .instructions h3 { margin-top: 0; color: var(--text); font-weight: 500; font-size: 16px; }
+        .instructions ul { color: var(--muted); margin: 8px 0; }
+        
+        .field-sizes {
+            display: none;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin: 12px 0;
+        }
+        
+        .field-sizes.show {
+            display: grid;
+        }
+        
+        .size-control {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .size-control label { font-size: 12px; min-width: 80px; }
+        
+        .size-control input { width: 60px; padding: 4px; font-size: 12px; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">🏆 Certificate System</a>
+            <div class="nav-links" id="navLinks">
+                <a href="login.html">Student Login</a>
+                <a href="download_certificate.html">Download</a>
+                <a href="admin.html">Admin Tools</a>
+            </div>
+            <div class="hamburger" id="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container" style="margin-top: 16px;">
+        <div class="header">
+            <h1>🎯 Certificate Position Editor</h1>
+            <p>Drag & Drop Tool - Visually Position Text Fields</p>
+        </div>
+        
+        <div class="instructions">
+            <h3>📋 How to Use This Tool:</h3>
+            <ul>
+                <li><strong>Step 1:</strong> Fill in the form below with sample data</li>
+                <li><strong>Step 2:</strong> Click "Load Certificate" to display the background</li>
+                <li><strong>Step 3:</strong> Drag the colored text boxes to perfect positions</li>
+                <li><strong>Step 4:</strong> Click "Export Coordinates" to get the JSON</li>
+                <li><strong>Step 5:</strong> Copy the coordinates into the fixed version</li>
+            </ul>
+        </div>
+        
+        <div class="form-section">
+            <div class="form-group">
+                <label for="certificateId">Certificate Number:</label>
+                <input type="text" id="certificateId" placeholder="e.g., CERT-2025-001" value="CERT-2025-001">
+            </div>
+            
+            <div class="form-group">
+                <label for="studentName">Student Name:</label>
+                <input type="text" id="studentName" placeholder="Enter full name" value="John Doe">
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn" onclick="loadCertificate()">🎨 Load Certificate</button>
+            <button class="btn secondary" onclick="exportCoordinates()">📤 Export Coordinates</button>
+            <button class="btn" onclick="toggleSizeControls()">⚙️ Font Sizes</button>
+            <button class="btn danger" onclick="resetPositions()">🔄 Reset Positions</button>
+        </div>
+        
+        <div class="field-sizes" id="fieldSizes">
+            <div class="size-control">
+                <label>Certificate Number:</label>
+                <input type="number" id="sizeId" value="24" min="8" max="48">
+                <span>px</span>
+            </div>
+            <div class="size-control">
+                <label>Name:</label>
+                <input type="number" id="sizeName" value="48" min="8" max="64">
+                <span>px</span>
+            </div>
+        </div>
+        
+        <div id="status"></div>
+        
+        <div class="editor-section">
+            <div class="certificate-editor" id="certificateEditor">
+                <canvas id="editorCanvas" width="1123" height="794"></canvas>
+                
+                <!-- Draggable text elements -->
+                <div class="draggable-text" id="dragId" data-field="certificateId" style="left: 400px; top: 80px; font-size: 24px;">
+                    Certificate No: CERT-2025-001
+                </div>
+                
+                <div class="draggable-text" id="dragName" data-field="studentName" style="left: 300px; top: 380px; font-size: 48px;">
+                    John Doe
+                </div>
+            </div>
+        </div>
+        
+        <div class="coordinates-output">
+            <h3>📋 Exported Coordinates (Copy this into certificate_fixed.html):</h3>
+            <pre id="coordinatesJson">Click "Export Coordinates" to generate the JSON...</pre>
+        </div>
+    </div>
+
+    <script>
+        // Hamburger menu functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const hamburger = document.getElementById('hamburger');
+            const navLinks = document.getElementById('navLinks');
+            
+            if (hamburger && navLinks) {
+                hamburger.addEventListener('click', function() {
+                    hamburger.classList.toggle('active');
+                    navLinks.classList.toggle('active');
+                });
+                
+                // Close menu when clicking a link
+                navLinks.addEventListener('click', function(e) {
+                    if (e.target.tagName === 'A') {
+                        hamburger.classList.remove('active');
+                        navLinks.classList.remove('active');
+                    }
+                });
+            }
+        });
+
+        let isDragging = false;
+        let currentElement = null;
+        let offset = { x: 0, y: 0 };
+        
+        const canvas = document.getElementById('editorCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Set canvas size for A4 landscape
+        canvas.width = 1123;
+        canvas.height = 794;
+
+        function showStatus(message, isError = false) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = `<div class="status ${isError ? 'error' : 'success'}">${message}</div>`;
+            setTimeout(() => {
+                statusDiv.innerHTML = '';
+            }, 3000);
+        }
+
+        function loadCertificate() {
+            const img = new Image();
+            img.onload = function() {
+                // Clear canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw background image scaled to A4 landscape
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                
+                showStatus('✅ Certificate background loaded! Drag the text boxes to position them.');
+                updateTextContent();
+            };
+            
+            img.onerror = function() {
+                showStatus('❌ Error: Could not load certificate background image. Please ensure "template.png" is in the same folder as this HTML file.', true);
+            };
+            
+            // Load the background image
+            img.src = 'template.png';
+        }
+
+        function updateTextContent() {
+            const data = {
+                certificateId: document.getElementById('certificateId').value || 'CERT-2025-001',
+                studentName: document.getElementById('studentName').value || 'John Doe'
+            };
+
+            document.getElementById('dragId').textContent = `Certificate No: ${data.certificateId}`;
+            document.getElementById('dragName').textContent = data.studentName;
+        }
+
+        function exportCoordinates() {
+            const coordinates = {};
+            const draggableElements = document.querySelectorAll('.draggable-text');
+            
+            draggableElements.forEach(element => {
+                const field = element.dataset.field;
+                const rect = element.getBoundingClientRect();
+                const editorRect = document.getElementById('certificateEditor').getBoundingClientRect();
+                
+                // Get the font size for this element
+                const fontSize = parseInt(window.getComputedStyle(element).fontSize);
+                
+                // Calculate position relative to the certificate editor
+                // Since element is centered with transform: translateX(-50%), the left position is actually the center
+                const x = Math.round(rect.left - editorRect.left);
+                // For canvas text baseline, we need to add most of the font height
+                const baselineOffset = Math.round(fontSize * 0.8); // ~80% of font height for baseline
+                const y = Math.round(rect.top - editorRect.top + baselineOffset);
+                
+                coordinates[field] = { x, y };
+            });
+
+            const output = {
+                textCoordinates: coordinates,
+                note: "Copy these coordinates into the textCoordinates object in certificate_fixed.html",
+                generated: new Date().toISOString()
+            };
+
+            document.getElementById('coordinatesJson').textContent = JSON.stringify(output, null, 2);
+            showStatus('📤 Coordinates exported! Copy the JSON below into your fixed certificate file.');
+        }
+
+        function resetPositions() {
+            document.getElementById('dragId').style.left = '400px';
+            document.getElementById('dragId').style.top = '80px';
+            document.getElementById('dragName').style.left = '300px';
+            document.getElementById('dragName').style.top = '380px';
+            
+            showStatus('🔄 Text positions reset to defaults.');
+        }
+
+        function toggleSizeControls() {
+            const sizeControls = document.getElementById('fieldSizes');
+            sizeControls.classList.toggle('show');
+        }
+
+        // Drag and drop functionality
+        function initializeDragAndDrop() {
+            const draggableElements = document.querySelectorAll('.draggable-text');
+
+            draggableElements.forEach(element => {
+                element.addEventListener('mousedown', startDrag);
+            });
+
+            document.addEventListener('mousemove', drag);
+            document.addEventListener('mouseup', endDrag);
+        }
+
+        function startDrag(e) {
+            isDragging = true;
+            currentElement = e.target;
+            currentElement.classList.add('dragging');
+            
+            const rect = currentElement.getBoundingClientRect();
+            offset.x = e.clientX - rect.left;
+            offset.y = e.clientY - rect.top;
+            
+            e.preventDefault();
+        }
+
+        function drag(e) {
+            if (!isDragging || !currentElement) return;
+
+            const editorRect = document.getElementById('certificateEditor').getBoundingClientRect();
+            const x = e.clientX - editorRect.left - offset.x;
+            const y = e.clientY - editorRect.top - offset.y;
+
+            // Constrain to editor bounds
+            const maxX = editorRect.width - currentElement.offsetWidth;
+            const maxY = editorRect.height - currentElement.offsetHeight;
+
+            currentElement.style.left = Math.max(0, Math.min(x, maxX)) + 'px';
+            currentElement.style.top = Math.max(0, Math.min(y, maxY)) + 'px';
+        }
+
+        function endDrag() {
+            if (currentElement) {
+                currentElement.classList.remove('dragging');
+            }
+            isDragging = false;
+            currentElement = null;
+        }
+
+        // Font size controls
+        document.querySelectorAll('[id^="size"]').forEach(input => {
+            input.addEventListener('input', function() {
+                const field = this.id.replace('size', '').toLowerCase();
+                let targetElement;
+                
+                switch(field) {
+                    case 'id': targetElement = document.getElementById('dragId'); break;
+                    case 'name': targetElement = document.getElementById('dragName'); break;
+                }
+                
+                if (targetElement) {
+                    targetElement.style.fontSize = this.value + 'px';
+                }
+            });
+        });
+
+        // Auto-update text when form fields change
+        document.querySelectorAll('input[type="text"]').forEach(input => {
+            if (input.id === 'certificateId' || input.id === 'studentName') {
+                input.addEventListener('input', updateTextContent);
+            }
+        });
+
+        // Initialize drag and drop on page load
+        window.onload = function() {
+            initializeDragAndDrop();
+            setTimeout(loadCertificate, 500);
+        };
+    </script>
+</body>
+</html>

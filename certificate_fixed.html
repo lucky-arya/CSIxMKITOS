@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Certificate Generator - Fixed Coordinates</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+        :root { --bg:#f8f9fa; --text:#202124; --muted:#5f6368; --border:#e0e0e0; --primary:#1a73e8; --primary-hover:#1669c1; }
+    body { font-family: 'Roboto', Arial, sans-serif; margin: 0; padding: 16px; background-color: var(--bg); color: var(--text); }
+    /* Navbar (shared) */
+    .navbar { background: #fff; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+    .nav-container { max-width: 1100px; margin: 0 auto; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; }
+    .logo { color: var(--text); text-decoration: none; font-weight: 500; }
+    .nav-links { display: flex; gap: 8px; }
+    .nav-links a { color: var(--text); text-decoration: none; padding: 8px 12px; border-radius: 4px; }
+    .nav-links a:hover { background: #f1f3f4; }
+    .hamburger { display: none; flex-direction: column; cursor: pointer; padding: 8px; }
+    .hamburger span { width: 20px; height: 2px; background: var(--text); margin: 2px 0; transition: 0.3s; }
+    .hamburger.active span:nth-child(1) { transform: rotate(-45deg) translate(-5px, 6px); }
+    .hamburger.active span:nth-child(2) { opacity: 0; }
+    .hamburger.active span:nth-child(3) { transform: rotate(45deg) translate(-5px, -6px); }
+    @media (max-width: 768px) { 
+        .nav-links { 
+            display: none; 
+            position: absolute; 
+            top: 100%; 
+            left: 0; 
+            right: 0; 
+            background: #fff; 
+            flex-direction: column; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+            border-top: 1px solid var(--border); 
+            padding: 8px 0; 
+        }
+        .nav-links.active { display: flex; }
+        .nav-links a { margin: 0 16px; padding: 12px 0; border-bottom: 1px solid #f1f3f4; }
+        .nav-links a:last-child { border-bottom: none; }
+        .hamburger { display: flex; }
+        .nav-container { position: relative; }
+    }
+        .container { max-width: 1100px; margin: 0 auto; background: #fff; padding: 16px; border-radius: 8px; border: 1px solid var(--border); }
+        .header { text-align: center; margin-bottom: 16px; }
+        .header h1 { color: var(--text); margin: 0 0 6px; font-weight: 500; font-size: 22px; }
+        .header p { color: var(--muted); margin: 0; font-size: 14px; }
+        .form-section { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin-bottom: 16px; }
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label { font-weight: 500; color: var(--text); margin-bottom: 6px; font-size: 13px; }
+        .form-group input { padding: 10px 12px; border: 1px solid #dadce0; border-radius: 4px; font-size: 14px; }
+        .form-group input:focus { outline: none; border-color: var(--primary); box-shadow: 0 0 0 2px rgba(26,115,232,.15); }
+        .preview-section { margin: 16px 0; text-align: center; }
+        .certificate-preview { position: relative; display: inline-block; border: 1px solid var(--border); border-radius: 6px; overflow: hidden; background: #fff; }
+        #certificateCanvas { max-width: 100%; height: auto; display: block; }
+        .controls { text-align: center; margin: 12px 0; }
+        .btn { background: var(--primary); color: #fff; border: none; padding: 10px 16px; border-radius: 4px; font-size: 14px; cursor: pointer; margin: 0 6px; font-weight: 500; }
+        .btn:hover { background: var(--primary-hover); }
+        .btn:disabled { opacity: .6; cursor: not-allowed; }
+        .coordinate-info { background: #fff; border: 1px solid var(--border); border-radius: 6px; padding: 12px; margin: 12px 0; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Courier New', monospace; font-size: 13px; }
+        .coordinate-info h3 { margin: 0 0 6px; color: var(--text); font-weight: 500; }
+        .status { text-align: center; margin: 8px 0; padding: 8px; border-radius: 6px; }
+        .status.success { background: #f1f8e9; color: #1b5e20; border: 1px solid #c8e6c9; }
+        .status.error { background: #fdecec; color: #8a1f1f; border: 1px solid #f8c7c7; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">🏆 Certificate System</a>
+            <div class="nav-links" id="navLinks">
+                <a href="login.html">Student Login</a>
+                <a href="download_certificate.html">Download</a>
+                <a href="admin.html">Admin Tools</a>
+            </div>
+            <div class="hamburger" id="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container" style="margin-top: 16px;">
+        <div class="header">
+            <h1>🏆 Certificate Generator</h1>
+            <p>Production Version - Fixed Coordinates | A4 Landscape Format</p>
+        </div>
+        
+        <div class="form-section">
+            <div class="form-group">
+                <label for="certificateId">Certificate Number:</label>
+                <input type="text" id="certificateId" placeholder="e.g., CERT-2025-001" value="CERT-2025-001">
+            </div>
+            
+            <div class="form-group">
+                <label for="studentName">Student Name:</label>
+                <input type="text" id="studentName" placeholder="Enter full name" value="John Doe">
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="btn" onclick="generateCertificate()">🎨 Generate Preview</button>
+            <button class="btn" onclick="downloadPNG()" id="downloadPNGBtn" disabled>📥 Download PNG</button>
+            <button class="btn" onclick="downloadPDF()" id="downloadPDFBtn" disabled>📄 Download PDF</button>
+        </div>
+        
+        <div id="status"></div>
+        
+        <div class="preview-section">
+            <div class="certificate-preview">
+                <canvas id="certificateCanvas" width="1123" height="794"></canvas>
+            </div>
+        </div>
+        
+        <div class="coordinate-info">
+            <h3>🎯 Current Text Coordinates (for fine-tuning):</h3>
+            <div id="coordinateDisplay">
+                <p><strong>Certificate Number:</strong> X: 404, Y: 256</p>
+                <p><strong>Student Name:</strong> X: 436, Y: 403</p>
+            </div>
+            <p><em>💡 Tip: Use the Position Editor tool to adjust these coordinates visually!</em></p>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script>
+        // Hamburger menu functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const hamburger = document.getElementById('hamburger');
+            const navLinks = document.getElementById('navLinks');
+            
+            if (hamburger && navLinks) {
+                hamburger.addEventListener('click', function() {
+                    hamburger.classList.toggle('active');
+                    navLinks.classList.toggle('active');
+                });
+                
+                // Close menu when clicking a link
+                navLinks.addEventListener('click', function(e) {
+                    if (e.target.tagName === 'A') {
+                        hamburger.classList.remove('active');
+                        navLinks.classList.remove('active');
+                    }
+                });
+            }
+        });
+
+        // Fixed coordinates for text placement (A4 landscape: 1123x794px)
+        const textCoordinates = {
+            certificateId: { x: 404, y: 256 },
+            studentName: { x: 436, y: 403 }
+        };
+
+        let certificateGenerated = false;
+        const canvas = document.getElementById('certificateCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Set canvas size for A4 landscape
+        canvas.width = 1123;
+        canvas.height = 794;
+
+        function showStatus(message, isError = false) {
+            const statusDiv = document.getElementById('status');
+            statusDiv.innerHTML = `<div class="status ${isError ? 'error' : 'success'}">${message}</div>`;
+            setTimeout(() => {
+                statusDiv.innerHTML = '';
+            }, 3000);
+        }
+
+        function generateCertificate() {
+            const img = new Image();
+            img.onload = function() {
+                // Clear canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw background image scaled to A4 landscape
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                
+                // Get form values
+                const data = {
+                    certificateId: document.getElementById('certificateId').value || 'CERT-2025-001',
+                    studentName: document.getElementById('studentName').value || 'John Doe'
+                };
+                
+                // Set font properties
+                ctx.fillStyle = '#e9b72e'; // Golden color
+                ctx.textAlign = 'center';
+                
+                // Certificate Number (medium font, centered)
+                ctx.font = 'bold 24px "Times New Roman", Times, serif';
+                ctx.fillText(`Certificate No: ${data.certificateId}`, textCoordinates.certificateId.x, textCoordinates.certificateId.y);
+                
+                // Student Name (large, centered)
+                ctx.font = 'bold 48px "Times New Roman", Times, serif';
+                ctx.fillText(data.studentName, textCoordinates.studentName.x, textCoordinates.studentName.y);
+                
+                certificateGenerated = true;
+                document.getElementById('downloadPNGBtn').disabled = false;
+                document.getElementById('downloadPDFBtn').disabled = false;
+                
+                showStatus('✅ Certificate generated successfully! Ready for download.');
+            };
+            
+            img.onerror = function() {
+                showStatus('❌ Error: Could not load certificate background image. Please ensure "template.png" is in the same folder as this HTML file.', true);
+            };
+            
+            // Load the background image
+            img.src = 'template.png';
+        }
+
+        function downloadPNG() {
+            if (!certificateGenerated) {
+                showStatus('❌ Please generate the certificate first!', true);
+                return;
+            }
+            
+            const link = document.createElement('a');
+            link.download = `certificate_${document.getElementById('studentName').value.replace(/\s+/g, '_')}_${Date.now()}.png`;
+            link.href = canvas.toDataURL('image/png', 1.0);
+            link.click();
+            
+            showStatus('📥 PNG certificate downloaded successfully!');
+        }
+
+        function downloadPDF() {
+            if (!certificateGenerated) {
+                showStatus('❌ Please generate the certificate first!', true);
+                return;
+            }
+            
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF({
+                orientation: 'landscape',
+                unit: 'px',
+                format: [1123, 794]
+            });
+            
+            const imgData = canvas.toDataURL('image/png', 1.0);
+            pdf.addImage(imgData, 'PNG', 0, 0, 1123, 794);
+            
+            const filename = `certificate_${document.getElementById('studentName').value.replace(/\s+/g, '_')}_${Date.now()}.pdf`;
+            pdf.save(filename);
+            
+            showStatus('📄 PDF certificate downloaded successfully!');
+        }
+
+        // Auto-generate preview when page loads
+        window.onload = function() {
+            setTimeout(generateCertificate, 500);
+        };
+
+        // Auto-regenerate when form fields change
+        document.querySelectorAll('input').forEach(input => {
+            input.addEventListener('input', function() {
+                if (certificateGenerated) {
+                    generateCertificate();
+                }
+            });
+        });
+    </script>
+</body>
+</html>

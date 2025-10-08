@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Certificate System</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+        :root { --bg:#f8f9fa; --text:#202124; --muted:#5f6368; --border:#e0e0e0; --primary:#1a73e8; --danger:#d93025; --success:#188038; }
+        * { box-sizing: border-box; }
+        body { margin:0; min-height:100vh; padding: 16px; background: var(--bg); color: var(--text); font-family: 'Roboto', Arial, sans-serif; }
+        /* Navbar (shared) */
+        .navbar { background: #fff; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+        .nav-container { max-width: 1100px; margin: 0 auto; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; }
+        .logo { color: var(--text); text-decoration: none; font-weight: 500; }
+        .nav-links { display: flex; gap: 8px; }
+        .nav-links a { color: var(--text); text-decoration: none; padding: 8px 12px; border-radius: 4px; }
+        .nav-links a:hover { background: #f1f3f4; }
+        .hamburger { display: none; flex-direction: column; cursor: pointer; padding: 8px; }
+        .hamburger span { width: 20px; height: 2px; background: var(--text); margin: 2px 0; transition: 0.3s; }
+        .hamburger.active span:nth-child(1) { transform: rotate(-45deg) translate(-5px, 6px); }
+        .hamburger.active span:nth-child(2) { opacity: 0; }
+        .hamburger.active span:nth-child(3) { transform: rotate(45deg) translate(-5px, -6px); }
+        @media (max-width: 768px) { 
+            .nav-links { 
+                display: none; 
+                position: absolute; 
+                top: 100%; 
+                left: 0; 
+                right: 0; 
+                background: #fff; 
+                flex-direction: column; 
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+                border-top: 1px solid var(--border); 
+                padding: 8px 0; 
+            }
+            .nav-links.active { display: flex; }
+            .nav-links a { margin: 0 16px; padding: 12px 0; border-bottom: 1px solid #f1f3f4; }
+            .nav-links a:last-child { border-bottom: none; }
+            .hamburger { display: flex; }
+            .nav-container { position: relative; }
+        }        .admin-container { max-width: 1100px; margin: 0 auto; display: none; }
+        
+        .admin-container.authenticated { display: block; }
+        
+        .admin-header { background: #fff; padding: 20px; border-radius: 8px; margin-bottom: 16px; text-align: center; border: 1px solid var(--border); }
+        
+        .admin-header h1 { color: var(--text); margin: 0 0 6px; font-size: 22px; font-weight: 500; }
+        .admin-header p { color: var(--muted); margin: 0; font-size: 14px; }
+        
+    .logout-btn { background: var(--danger); color: #fff; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; font-size: 13px; }
+        .logout-btn:hover { background: #b1271c; }
+        
+        .admin-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-bottom: 16px; }
+        
+        .admin-card { background: #fff; padding: 16px; border-radius: 8px; border: 1px solid var(--border); text-align: left; }
+        
+        .admin-card h3 { color: var(--text); margin: 8px 0; font-size: 18px; font-weight: 500; }
+        .admin-card p { color: var(--muted); margin: 0 0 12px; line-height: 1.5; font-size: 14px; }
+        .admin-icon { font-size: 28px; margin-bottom: 6px; }
+        .admin-btn { background: var(--primary); color: #fff; text-decoration: none; padding: 8px 12px; border-radius: 4px; font-weight: 500; display: inline-block; margin: 4px 4px 0 0; font-size: 13px; }
+        .admin-btn:hover { background: #1669c1; }
+        .admin-btn.secondary { background: var(--success); }
+        .admin-btn.secondary:hover { background: #146c31; }
+        .admin-btn.danger { background: var(--danger); }
+        .admin-btn.danger:hover { background: #b1271c; }
+        
+        .stats-section { background: #fff; padding: 16px; border-radius: 8px; margin-bottom: 16px; border: 1px solid var(--border); }
+        
+        .stats-section h2 { color: var(--text); margin: 0 0 12px; text-align: center; font-size: 18px; font-weight: 500; }
+        
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+        
+        .stat-card { background: #fff; padding: 16px; border-radius: 8px; text-align: center; border: 1px solid var(--border); }
+        
+        .stat-number { font-size: 24px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+        .stat-label { color: var(--muted); font-size: 12px; }
+        
+        .back-link { display: inline-block; color: var(--primary); text-decoration: none; margin-top: 12px; padding: 8px 10px; border: 1px solid var(--border); border-radius: 4px; }
+        .back-link:hover { background: #f1f3f4; }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo">🏆 Certificate System</a>
+            <div class="nav-links" id="navLinks">
+                <a href="login.html">Student Login</a>
+                <a href="download_certificate.html">Download</a>
+                <a href="admin.html">Admin Tools</a>
+            </div>
+            <div class="hamburger" id="hamburger">
+                <span></span>
+                <span></span>
+                <span></span>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Admin Dashboard -->
+    <div class="admin-container authenticated" id="adminContainer">
+        
+        <div class="admin-header">
+            <div style="display:flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h1>🛠️ Admin Dashboard</h1>
+                    <p>Certificate System Management Portal</p>
+                </div>
+                <button class="logout-btn" onclick="logout()">🚪 Logout</button>
+            </div>
+        </div>
+
+        <!-- Statistics Section -->
+        <div class="stats-section">
+            <h2>📊 System Statistics</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalStudents">-</div>
+                    <div class="stat-label">Total Students</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalCertificates">-</div>
+                    <div class="stat-label">Certificates Generated</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="totalDownloads">-</div>
+                    <div class="stat-label">Total Downloads</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="uniqueDownloads">-</div>
+                    <div class="stat-label">Unique Downloads</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Tools Grid -->
+        <div class="admin-grid">
+            <div class="admin-card">
+                <div class="admin-icon">📊</div>
+                <h3>Student Data Manager</h3>
+                <p>Manage student database with name and email entries. Add, edit, or remove student records.</p>
+                <a href="/api/admin/students.csv" class="admin-btn" target="_blank">📄 View CSV File</a>
+                <a href="/api/admin/students.csv" class="admin-btn secondary" download>⬇️ Download CSV</a>
+            </div>
+
+            <div class="admin-card">
+                <div class="admin-icon">🎨</div>
+                <h3>Certificate Generator</h3>
+                <p>Production-ready certificate generator with fixed coordinates. Generate certificates with Name and Certificate Number.</p>
+                <a href="certificate_fixed.html" class="admin-btn">🖼️ Open Generator</a>
+            </div>
+
+            <div class="admin-card">
+                <div class="admin-icon">⚙️</div>
+                <h3>Position Editor</h3>
+                <p>Visual drag-and-drop tool to adjust text positioning on certificates. Export coordinates for the fixed generator.</p>
+                <a href="certificate_position_editor.html" class="admin-btn">🎯 Open Editor</a>
+            </div>
+
+            <div class="admin-card">
+                <div class="admin-icon">📋</div>
+                <h3>Certificate References</h3>
+                <p>View and manage generated certificate numbers and download statistics.</p>
+                <a href="/api/admin/references.json" class="admin-btn" target="_blank">📋 View References</a>
+                <a href="/api/admin/references.json" class="admin-btn secondary" download>⬇️ Download JSON</a>
+            </div>
+
+            <div class="admin-card">
+                <div class="admin-icon">🔧</div>
+                <h3>System Tools</h3>
+                <p>Advanced system management tools and utilities for maintaining the certificate system.</p>
+                <button class="admin-btn secondary" onclick="clearReferences()">🗑️ Clear References</button>
+                <button class="admin-btn danger" onclick="resetSystem()">⚠️ Reset System</button>
+            </div>
+
+            <div class="admin-card">
+                <div class="admin-icon">📈</div>
+                <h3>Analytics & Reports</h3>
+                <p>Generate reports and view detailed analytics about certificate generation and downloads.</p>
+                <button class="admin-btn" onclick="generateReport()">📊 Generate Report</button>
+                <button class="admin-btn secondary" onclick="exportAnalytics()">📤 Export Data</button>
+            </div>
+        </div>
+
+        <div style="text-align: center;">
+            <a href="index.html" class="back-link">← Back to Main Site</a>
+        </div>
+    </div>
+
+    <script>
+        // Hamburger menu functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const hamburger = document.getElementById('hamburger');
+            const navLinks = document.getElementById('navLinks');
+            
+            if (hamburger && navLinks) {
+                hamburger.addEventListener('click', function() {
+                    hamburger.classList.toggle('active');
+                    navLinks.classList.toggle('active');
+                });
+                
+                // Close menu when clicking a link
+                navLinks.addEventListener('click', function(e) {
+                    if (e.target.tagName === 'A') {
+                        hamburger.classList.remove('active');
+                        navLinks.classList.remove('active');
+                    }
+                });
+            }
+        });
+
+        // Ensure admin session exists before showing dashboard
+        window.addEventListener('load', async () => {
+            try {
+                const res = await fetch('/api/admin/me', { credentials: 'include' });
+                const data = await res.json();
+                if (!res.ok || !data.authenticated) {
+                    window.location.href = '/admin-login.html';
+                    return;
+                }
+            } catch (e) {
+                window.location.href = '/admin-login.html';
+                return;
+            }
+        });
+
+        // Override logout to hit API then redirect
+        function logout() {
+            fetch('/api/admin/logout', { method: 'POST', credentials: 'include' })
+                .finally(() => window.location.href = '/admin-login.html');
+        }
+
+        async function loadStatistics() {
+            try {
+                const statsRes = await fetch('/api/get_stats', { credentials: 'include' });
+                if (statsRes.ok) {
+                    const stats = await statsRes.json();
+                    const studentsRes = await fetch('/api/students', { credentials: 'include' });
+                    let studentCount = '-';
+                    if (studentsRes.ok) {
+                        const s = await studentsRes.json();
+                        studentCount = s.count ?? (s.students ? s.students.length : '-');
+                    }
+                    document.getElementById('totalStudents').textContent = studentCount;
+                    document.getElementById('totalCertificates').textContent = stats.total_references ?? '-';
+                    document.getElementById('totalDownloads').textContent = stats.total_downloads ?? '-';
+                    document.getElementById('uniqueDownloads').textContent = stats.unique_downloads ?? '-';
+                }
+            } catch (e) {
+                // leave defaults
+            }
+        }
+
+        async function clearReferences() {
+            if (confirm('Are you sure you want to clear all certificate references? This action cannot be undone.')) {
+                try {
+                    const res = await fetch('/api/admin/clear_references', { method: 'POST', credentials: 'include' });
+                    if (res.ok) {
+                        alert('Certificate references cleared successfully.');
+                        loadStatistics();
+                    } else {
+                        alert('Failed to clear references. Please try again.');
+                    }
+                } catch (_) {
+                    alert('Failed to clear references. Network error.');
+                }
+            }
+        }
+
+        async function resetSystem() {
+            if (confirm('⚠️ WARNING: This will reset the entire system including all data. Are you absolutely sure?')) {
+                const sure = prompt('This action is IRREVERSIBLE. Type YES to confirm:');
+                if (sure && sure.toUpperCase() === 'YES') {
+                    try {
+                        const res = await fetch('/api/admin/reset_system', { method: 'POST', credentials: 'include' });
+                        if (res.ok) {
+                            alert('System reset completed.');
+                            loadStatistics();
+                        } else {
+                            alert('Failed to reset system.');
+                        }
+                    } catch (_) {
+                        alert('Failed to reset system. Network error.');
+                    }
+                }
+            }
+        }
+
+        function generateReport() {
+            // Simulate report generation
+            const reportData = {
+                generated: new Date().toISOString(),
+                totalStudents: document.getElementById('totalStudents').textContent,
+                totalCertificates: document.getElementById('totalCertificates').textContent,
+                totalDownloads: document.getElementById('totalDownloads').textContent,
+                uniqueDownloads: document.getElementById('uniqueDownloads').textContent
+            };
+
+            const reportContent = `Certificate System Report
+Generated: ${new Date().toLocaleString()}
+
+Statistics:
+- Total Students: ${reportData.totalStudents}
+- Certificates Generated: ${reportData.totalCertificates}
+- Total Downloads: ${reportData.totalDownloads}
+- Unique Downloads: ${reportData.uniqueDownloads}
+
+System Status: Operational
+Last Updated: ${new Date().toLocaleString()}`;
+
+            const blob = new Blob([reportContent], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `certificate-system-report-${new Date().toISOString().split('T')[0]}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function exportAnalytics() {
+            // Simulate analytics export
+            const analyticsData = {
+                exportDate: new Date().toISOString(),
+                systemStats: {
+                    totalStudents: document.getElementById('totalStudents').textContent,
+                    totalCertificates: document.getElementById('totalCertificates').textContent,
+                    totalDownloads: document.getElementById('totalDownloads').textContent,
+                    uniqueDownloads: document.getElementById('uniqueDownloads').textContent
+                },
+                systemInfo: {
+                    version: "1.0.0",
+                    lastUpdate: new Date().toISOString()
+                }
+            };
+
+            const blob = new Blob([JSON.stringify(analyticsData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `certificate-analytics-${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        // Load stats after auth check
+        window.addEventListener('load', () => {
+            // already checked auth at top; now load stats
+            loadStatistics();
+        });
+    </script>
+</body>
+</html>
