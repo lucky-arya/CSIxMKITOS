@@ -571,8 +571,18 @@ app.get('/admin', (req, res) => {
     return res.redirect('/admin-login.html');
 });
 
-// Serve static files last
-app.use(express.static('.'));
+// Serve static files
+app.use(express.static(__dirname));
+
+// Route for root path - redirect to index.html
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// Route for login page
+app.get('/login', (req, res) => {
+    res.sendFile(path.join(__dirname, 'login.html'));
+});
 
 // Error handling middleware
 app.use((err, req, res, next) => {
