@@ -195,7 +195,7 @@
                 
                 // Student Name (Sacramento font, larger size, darker color)
                 ctx.fillStyle = '#181818';
-                ctx.font = '52.6px "Sacramento", cursive';
+                ctx.font = '52.6px "Sacramento"';
                 ctx.fillText(data.studentName, textCoordinates.studentName.x, textCoordinates.studentName.y);
                 
                 certificateGenerated = true;
@@ -206,11 +206,11 @@
             };
             
             img.onerror = function() {
-                showStatus('❌ Error: Could not load certificate background image. Please ensure "template.png" is in the same folder as this HTML file.', true);
+                showStatus('❌ Error: Could not load certificate background image. Please ensure "template.jpg" is in the same folder as this HTML file.', true);
             };
             
             // Load the background image
-            img.src = 'template.png';
+            img.src = 'template.jpg';
         }
 
         function downloadPNG() {

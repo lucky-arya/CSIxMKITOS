@@ -291,9 +291,9 @@
             const certificateType = user.certificate_type || 'Completion';
             
             // Determine which certificate image to use
-            let certificateImage = 'Completion_Certificate.png';
+            let certificateImage = 'Completion_Certificate.jpg';
             if (certificateType === 'Achievers') {
-                certificateImage = 'Achiever_Certificate.png';
+                certificateImage = 'Achiever_Certificate.jpg';
             }
             
             const img = new Image();
@@ -338,7 +338,7 @@
                 // Try fallback
                 if (certificateImage.includes('Achiever')) {
                     console.log('Trying fallback to Completion certificate...');
-                    img.src = 'Completion_Certificate.png';
+                    img.src = 'Completion_Certificate.jpg';
                 }
             };
             
