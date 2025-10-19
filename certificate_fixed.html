@@ -5,7 +5,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Certificate Generator - Fixed Coordinates</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Sacramento&display=swap');
+        @font-face {
+            font-family: 'Canva Sans';
+            src: local('Arial'), local('Helvetica'), local('sans-serif');
+            /* Canva Sans fallback - using system sans-serif as close alternative */
+        }
         :root { --bg:#f8f9fa; --text:#202124; --muted:#5f6368; --border:#e0e0e0; --primary:#1a73e8; --primary-hover:#1669c1; }
     body { font-family: 'Roboto', Arial, sans-serif; margin: 0; padding: 16px; background-color: var(--bg); color: var(--text); }
     /* Navbar (shared) */
@@ -82,7 +87,6 @@
     <div class="container" style="margin-top: 16px;">
         <div class="header">
             <h1>🏆 Certificate Generator</h1>
-            <p>Production Version - Fixed Coordinates | A4 Landscape Format</p>
         </div>
         
         <div class="form-section">
@@ -182,15 +186,16 @@
                 };
                 
                 // Set font properties
-                ctx.fillStyle = '#e9b72e'; // Golden color
                 ctx.textAlign = 'center';
+
+                // Certificate Number (Canva Sans style, smaller size, dark color)
+                ctx.fillStyle = '#181818';
+                ctx.font = '18px "Canva Sans", Arial, sans-serif';
+                ctx.fillText(data.certificateId, textCoordinates.certificateId.x, textCoordinates.certificateId.y);
                 
-                // Certificate Number (medium font, centered)
-                ctx.font = 'bold 24px "Times New Roman", Times, serif';
-                ctx.fillText(`Certificate No: ${data.certificateId}`, textCoordinates.certificateId.x, textCoordinates.certificateId.y);
-                
-                // Student Name (large, centered)
-                ctx.font = 'bold 48px "Times New Roman", Times, serif';
+                // Student Name (Sacramento font, larger size, darker color)
+                ctx.fillStyle = '#181818';
+                ctx.font = '52.6px "Sacramento", cursive';
                 ctx.fillText(data.studentName, textCoordinates.studentName.x, textCoordinates.studentName.y);
                 
                 certificateGenerated = true;

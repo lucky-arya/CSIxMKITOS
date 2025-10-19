@@ -8,6 +8,7 @@ const path = require('path');
 const csv = require('csv-parser');
 const createCsvWriter = require('csv-writer').createObjectCsvWriter;
 const { v4: uuidv4 } = require('uuid');
+const mongoose = require('mongoose');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -31,7 +32,7 @@ app.use(session({
 }));
 
 // Configuration
-const csvFile = path.join(__dirname, 'data', 'students.csv');
+const csvFile = path.join(__dirname, 'data', 'finalcertificate.csv');
 const referencesFile = path.join(__dirname, 'data', 'references.json');
 const dataDir = path.join(__dirname, 'data');
 
@@ -45,6 +46,60 @@ if (!ADMIN_USER || !ADMIN_PASS) {
     console.error('📝 Please check your .env file and ensure these variables are set');
     process.exit(1);
 }
+
+// MongoDB Configuration
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/certificate_generator';
+
+// MongoDB Connection
+mongoose.connect(MONGODB_URI)
+.then(() => console.log('✅ MongoDB connected successfully'))
+.catch(err => {
+    console.error('❌ MongoDB connection error:', err.message);
+    console.log('⚠️  Running without MongoDB - using fallback JSON storage');
+});
+
+// MongoDB Schema for Certificate References
+const certificateSchema = new mongoose.Schema({
+    reference_id: {
+        type: String,
+        required: true,
+        unique: true,
+        index: true
+    },
+    user: {
+        name: {
+            type: String,
+            required: true
+        },
+        email: {
+            type: String,
+            required: true,
+            lowercase: true,
+            index: true
+        },
+        certificate_type: {
+            type: String,
+            enum: ['Completion', 'Achievers'],
+            required: true
+        }
+    },
+    timestamp: {
+        type: Date,
+        default: Date.now
+    },
+    downloaded: {
+        type: Boolean,
+        default: false
+    },
+    download_count: {
+        type: Number,
+        default: 0
+    }
+}, {
+    timestamps: true
+});
+
+const Certificate = mongoose.model('Certificate', certificateSchema);
 
 function requireAdmin(req, res, next) {
     if (req.session && req.session.isAdmin) return next();
@@ -74,7 +129,7 @@ async function initializeStudentsCSV() {
     try {
         await fs.access(csvFile);
     } catch (error) {
-        const header = 'name,email,eligibility\n';
+        const header = 'email,certificate\n';
         await fs.writeFile(csvFile, header, 'utf8');
     }
 }
@@ -136,23 +191,50 @@ function generateReferenceId() {
 }
 
 /**
- * Read references from JSON file
+ * Read references - DEPRECATED (kept for backward compatibility)
+ * Use MongoDB queries instead
  */
 async function readReferences() {
     try {
-        const content = await fs.readFile(referencesFile, 'utf8');
-        return JSON.parse(content);
+        // Fallback to JSON file if MongoDB is not available
+        if (mongoose.connection.readyState !== 1) {
+            const content = await fs.readFile(referencesFile, 'utf8');
+            return JSON.parse(content);
+        }
+        
+        // Convert MongoDB documents to old format for compatibility
+        const certificates = await Certificate.find();
+        const references = {};
+        certificates.forEach(cert => {
+            references[cert.reference_id] = {
+                id: cert.reference_id,
+                user: cert.user,
+                timestamp: cert.timestamp,
+                downloaded: cert.downloaded,
+                download_count: cert.download_count
+            };
+        });
+        return references;
     } catch (error) {
+        console.error('Error reading references:', error);
         return {};
     }
 }
 
 /**
- * Write references to JSON file
+ * Write references - DEPRECATED (kept for backward compatibility)
+ * Use MongoDB operations instead
  */
 async function writeReferences(references) {
     try {
-        await fs.writeFile(referencesFile, JSON.stringify(references, null, 2));
+        // Fallback to JSON file if MongoDB is not available
+        if (mongoose.connection.readyState !== 1) {
+            await fs.writeFile(referencesFile, JSON.stringify(references, null, 2));
+            return true;
+        }
+        
+        // This function is deprecated - direct MongoDB operations are preferred
+        console.warn('writeReferences is deprecated, use MongoDB operations directly');
         return true;
     } catch (error) {
         console.error('Error writing references:', error);
@@ -163,65 +245,147 @@ async function writeReferences(references) {
 /**
  * Find user in CSV data and check eligibility
  */
-async function findUser(name, email) {
+/**
+ * Find email in CSV and return certificate data
+ */
+async function findEmailInCSV(email) {
     const students = await readCSV(csvFile);
     
     return students.find(student => 
-        student.name.trim().toLowerCase() === name.trim().toLowerCase() &&
         student.email.trim().toLowerCase() === email.trim().toLowerCase()
     );
 }
 
 /**
- * Check if user is eligible for certificate
+ * Find existing certificate by email only - MongoDB Version
+ */
+async function findExistingCertificateByEmail(email) {
+    try {
+        // Use MongoDB if available
+        if (mongoose.connection.readyState === 1) {
+            const certificate = await Certificate.findOne({
+                'user.email': email.trim().toLowerCase()
+            });
+            
+            if (certificate) {
+                return {
+                    id: certificate.reference_id,
+                    user: certificate.user,
+                    timestamp: certificate.timestamp,
+                    downloaded: certificate.downloaded,
+                    download_count: certificate.download_count
+                };
+            }
+            return null;
+        }
+        
+        // Fallback to JSON file
+        const references = await readReferences();
+        for (const [refId, refData] of Object.entries(references)) {
+            if (refData.user && 
+                refData.user.email.trim().toLowerCase() === email.trim().toLowerCase()) {
+                return refData;
+            }
+        }
+        return null;
+    } catch (error) {
+        console.error('Error finding existing certificate:', error);
+        return null;
+    }
+}
+
+/**
+ * OLD FUNCTION - Keep for backward compatibility with admin panel
+ */
+async function findUser(name, email) {
+    const students = await readCSV(csvFile);
+    
+    return students.find(student => 
+        student.email.trim().toLowerCase() === email.trim().toLowerCase()
+    );
+}
+
+/**
+ * OLD FUNCTION - No longer used but kept for backward compatibility
  */
 function isEligibleForCertificate(user) {
-    if (!user || !user.eligibility) {
-        return false;
-    }
-    
-    const eligibility = user.eligibility.trim().toLowerCase();
-    return eligibility === 'eligible' || eligibility === 'well done';
+    // Always return true now since eligibility is checked via CSV presence
+    return true;
 }
 
 /**
- * Store reference ID
+ * Store reference ID - MongoDB Version
  */
 async function storeReference(referenceId, userData) {
-    const references = await readReferences();
-    references[referenceId] = {
-        id: referenceId,
-        user: userData,
-        timestamp: new Date().toISOString(),
-        downloaded: false,
-        download_count: 0
-    };
-    return await writeReferences(references);
+    try {
+        // Use MongoDB if available
+        if (mongoose.connection.readyState === 1) {
+            const certificate = new Certificate({
+                reference_id: referenceId,
+                user: userData,
+                timestamp: new Date(),
+                downloaded: false,
+                download_count: 0
+            });
+            
+            await certificate.save();
+            console.log('✅ Certificate saved to MongoDB:', referenceId);
+            return true;
+        }
+        
+        // Fallback to JSON file
+        const references = await readReferences();
+        references[referenceId] = {
+            id: referenceId,
+            user: userData,
+            timestamp: new Date().toISOString(),
+            downloaded: false,
+            download_count: 0
+        };
+        return await writeReferences(references);
+    } catch (error) {
+        console.error('Error storing reference:', error);
+        return false;
+    }
 }
 
 /**
- * Get reference data
+ * Get reference data - MongoDB Version
  */
 async function getReference(referenceId) {
-    const references = await readReferences();
-    return references[referenceId] || null;
+    try {
+        // Use MongoDB if available
+        if (mongoose.connection.readyState === 1) {
+            const certificate = await Certificate.findOne({
+                reference_id: referenceId
+            });
+            
+            if (certificate) {
+                return {
+                    id: certificate.reference_id,
+                    user: certificate.user,
+                    timestamp: certificate.timestamp,
+                    downloaded: certificate.downloaded,
+                    download_count: certificate.download_count
+                };
+            }
+            return null;
+        }
+        
+        // Fallback to JSON file
+        const references = await readReferences();
+        return references[referenceId] || null;
+    } catch (error) {
+        console.error('Error getting reference:', error);
+        return null;
+    }
 }
 
 /**
- * Find existing certificate for a user
+ * Find existing certificate for a user - OLD VERSION
  */
 async function findExistingCertificate(name, email) {
-    const references = await readReferences();
-    
-    // Search through all references to find one for this user
-    for (const [refId, refData] of Object.entries(references)) {
-        if (refData.user && 
-            refData.user.name.trim().toLowerCase() === name.trim().toLowerCase() &&
-            refData.user.email.trim().toLowerCase() === email.trim().toLowerCase()) {
-            return refData;
-        }
-    }
-    return null;
+    return await findExistingCertificateByEmail(email);
 }
 
 /**
@@ -263,59 +427,115 @@ app.get('/api/admin/me', (req, res) => {
 });
 
 /**
- * Verify student credentials
+ * Verify student credentials - NEW LOGIC
+ * Check email in CSV, return certificate type if found
  */
 app.post('/api/verify_credentials', async (req, res) => {
     try {
-        const { name, email } = req.body;
+        const { email } = req.body;
         
-        if (!name || !email) {
-            return res.status(400).json({ error: 'Name and email are required' });
+        if (!email) {
+            return res.status(400).json({ error: 'Email is required' });
         }
         
-        const user = await findUser(name, email);
-        if (user) {
-            // Check eligibility first
-            if (!isEligibleForCertificate(user)) {
-                return res.status(403).json({ 
-                    error: 'You are not eligible for a certificate at this time. Please contact your administrator.',
-                    eligibility_status: user.eligibility || 'unknown'
-                });
-            }
-            
-            // Check if user already has a certificate
-            const existingCertificate = await findExistingCertificate(name, email);
-            
-            if (existingCertificate) {
-                // Return existing certificate
-                res.json({
-                    success: true,
-                    reference_id: existingCertificate.id,
-                    user: existingCertificate.user,
-                    existing: true,
-                    created_date: existingCertificate.timestamp
-                });
-            } else {
-                // Generate new certificate
-                const referenceId = generateReferenceId();
-                const stored = await storeReference(referenceId, user);
-                
-                if (stored) {
-                    res.json({
-                        success: true,
-                        reference_id: referenceId,
-                        user: user,
-                        existing: false
-                    });
-                } else {
-                    res.status(500).json({ error: 'Failed to store reference' });
-                }
-            }
-        } else {
-            res.status(404).json({ error: 'User not found. Please check your name and email address.' });
+        // Find email in CSV and get certificate type
+        const certificateData = await findEmailInCSV(email);
+        
+        if (!certificateData) {
+            return res.status(404).json({ 
+                error: 'Email not found. You are not eligible for a certificate.' 
+            });
         }
+        
+        // Check if certificate already generated for this email
+        const existingCertificate = await findExistingCertificateByEmail(email);
+        
+        if (existingCertificate) {
+            // Return existing certificate
+            return res.json({
+                success: true,
+                reference_id: existingCertificate.id,
+                user: existingCertificate.user,
+                certificate_type: existingCertificate.user.certificate_type,
+                existing: true,
+                message: 'Certificate already generated',
+                created_date: existingCertificate.timestamp
+            });
+        }
+        
+        // Email found and no certificate generated yet
+        res.json({
+            success: true,
+            email: email,
+            certificate_type: certificateData.certificate,
+            eligible: true,
+            existing: false,
+            message: 'Please enter your name to generate certificate'
+        });
+        
     } catch (error) {
         console.error('Error verifying credentials:', error);
+        res.status(500).json({ error: 'Internal server error' });
+    }
+});
+
+/**
+ * Generate certificate - NEW ENDPOINT
+ * Takes email and name, generates certificate once
+ */
+app.post('/api/generate_certificate', async (req, res) => {
+    try {
+        const { email, name } = req.body;
+        
+        if (!email || !name) {
+            return res.status(400).json({ error: 'Email and name are required' });
+        }
+        
+        // Check if email is in CSV
+        const certificateData = await findEmailInCSV(email);
+        
+        if (!certificateData) {
+            return res.status(404).json({ 
+                error: 'Email not found. You are not eligible for a certificate.' 
+            });
+        }
+        
+        // Check if certificate already exists
+        const existingCertificate = await findExistingCertificateByEmail(email);
+        
+        if (existingCertificate) {
+            return res.status(409).json({
+                error: 'Certificate already generated for this email',
+                reference_id: existingCertificate.id,
+                existing: true
+            });
+        }
+        
+        // Generate new certificate
+        const referenceId = generateReferenceId();
+        const user = {
+            name: name.trim(),
+            email: email.toLowerCase().trim(),
+            certificate_type: certificateData.certificate
+        };
+        
+        const stored = await storeReference(referenceId, user);
+        
+        if (stored) {
+            res.json({
+                success: true,
+                reference_id: referenceId,
+                user: user,
+                certificate_type: user.certificate_type,
+                existing: false,
+                message: 'Certificate generated successfully'
+            });
+        } else {
+            res.status(500).json({ error: 'Failed to store certificate reference' });
+        }
+        
+    } catch (error) {
+        console.error('Error generating certificate:', error);
         res.status(500).json({ error: 'Internal server error' });
     }
 });
@@ -542,6 +762,14 @@ app.use('/data', (req, res) => res.status(403).json({ error: 'Forbidden' }));
 // Admin maintenance endpoints
 app.post('/api/admin/clear_references', requireAdmin, async (req, res) => {
     try {
+        // Use MongoDB if available
+        if (mongoose.connection.readyState === 1) {
+            await Certificate.deleteMany({});
+            console.log('✅ All certificates cleared from MongoDB');
+            return res.json({ success: true, message: 'All certificate references cleared from database.' });
+        }
+        
+        // Fallback to JSON file
         await writeReferences({});
         return res.json({ success: true, message: 'All certificate references cleared.' });
     } catch (error) {

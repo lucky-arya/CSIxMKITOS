@@ -6,8 +6,13 @@
     <title>Download Certificate - Certificate System</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Sacramento&display=swap" rel="stylesheet">
     <style>
+        @font-face {
+            font-family: 'Canva Sans';
+            src: local('Arial'), local('Helvetica'), local('sans-serif');
+            /* Canva Sans fallback - using system sans-serif as close alternative */
+        }
         :root { --bg:#f8f9fa; --text:#202124; --muted:#5f6368; --border:#e0e0e0; --primary:#1a73e8; --primary-hover:#1669c1; }
         * { box-sizing: border-box; }
     body { margin: 0; min-height: 100vh; padding: 16px; background: var(--bg); color: var(--text); font-family: 'Roboto', Arial, sans-serif; }
@@ -135,6 +140,7 @@
             
             <div class="certificate-preview" id="certificatePreview">
                 <h3>📋 Certificate Preview</h3>
+                <p id="certificateTypeLabel" style="color: var(--primary); font-weight: 500; margin: 8px 0;"></p>
                 <canvas id="previewCanvas" class="preview-canvas" width="1123" height="794"></canvas>
             </div>
             
@@ -281,31 +287,45 @@
             canvas.width = 1123;
             canvas.height = 794;
             
+            const user = data.user;
+            const certificateType = user.certificate_type || 'Completion';
+            
+            // Determine which certificate image to use
+            let certificateImage = 'Completion_Certificate.png';
+            if (certificateType === 'Achievers') {
+                certificateImage = 'Achiever_Certificate.png';
+            }
+            
             const img = new Image();
             img.onload = function() {
                 // Clear and draw background
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                 
-                // Text coordinates (matching the fixed version)
+                // Text coordinates (adjust these based on your certificate design)
                 const textCoordinates = {
-                    certificateId: { x: 550, y: 260 },
-                    studentName: { x: 550, y: 403 }
+                    certificateId: { x: 135, y: 764 },
+                    studentName: { x: 550, y: 430 }
                 };
                 
-                const user = data.user;
-                
                 // Set font properties
-                ctx.fillStyle = '#e9b72e';
                 ctx.textAlign = 'center';
                 
-                // Certificate Number (medium font, centered)
-                ctx.font = 'bold 24px "Times New Roman", Times, serif';
-                ctx.fillText(`Certificate No: ${data.id}`, textCoordinates.certificateId.x, textCoordinates.certificateId.y);
+                // Certificate Number (Canva Sans style, smaller size, dark color)
+                ctx.fillStyle = '#181818';
+                ctx.font = '18px "Canva Sans", Arial, sans-serif';
+                ctx.fillText(data.id, textCoordinates.certificateId.x, textCoordinates.certificateId.y);
                 
-                // Student Name (large, centered)
-                ctx.font = 'bold 48px "Times New Roman", Times, serif';
+                // Student Name (Sacramento font, larger size, darker color)
+                ctx.fillStyle = '#181818';
+                ctx.font = '64px "Sacramento"';
                 ctx.fillText(user.name, textCoordinates.studentName.x, textCoordinates.studentName.y);
+                
+                // Show certificate type
+                const certTypeLabel = document.getElementById('certificateTypeLabel');
+                if (certTypeLabel) {
+                    certTypeLabel.textContent = `Certificate Type: ${certificateType}`;
+                }
                 
                 // Show preview and download controls
                 document.getElementById('certificatePreview').classList.add('show');
@@ -313,11 +333,18 @@
             };
             
             img.onerror = function() {
-                showMessage('⚠️ Certificate preview unavailable, but download will work. Please ensure the background image is available.', 'error');
-                document.getElementById('downloadControls').classList.add('show');
+                showMessage('⚠️ Certificate template not found. Please contact administrator.', 'error');
+                console.error('Failed to load certificate image:', certificateImage);
+                // Try fallback
+                if (certificateImage.includes('Achiever')) {
+                    console.log('Trying fallback to Completion certificate...');
+                    img.src = 'Completion_Certificate.png';
+                }
             };
             
-            img.src = 'template.png';
+            // Load the appropriate certificate template
+            console.log('Loading certificate template:', certificateImage);
+            img.src = certificateImage;
         }
 
         function downloadCertificate(format) {

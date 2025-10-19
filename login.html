@@ -143,6 +143,161 @@
         .footer { text-align: center; padding: 16px; color: var(--muted); border-top: 1px solid var(--border); background: #fff; }
         .footer a { color: var(--primary); text-decoration: none; }
         .footer a:hover { text-decoration: underline; }
+        
+        /* Scrolling Warning Notice */
+        .warning-banner {
+            background: linear-gradient(90deg, #d32f2f 0%, #f44336 50%, #d32f2f 100%);
+            background-size: 200% 100%;
+            color: #fff;
+            padding: 12px 16px;
+            margin: 16px 0;
+            border-radius: 6px;
+            border: 2px solid #b71c1c;
+            box-shadow: 0 2px 8px rgba(211, 47, 47, 0.3);
+            animation: gradient-shift 3s ease infinite;
+            display: none;
+        }
+        .warning-banner.show { display: block; }
+        .warning-banner .warning-title {
+            font-weight: 700;
+            font-size: 15px;
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .warning-banner .warning-icon {
+            font-size: 20px;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.2); opacity: 0.8; }
+        }
+        @keyframes gradient-shift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        .warning-banner .warning-text {
+            font-size: 13px;
+            line-height: 1.5;
+            margin: 4px 0;
+        }
+        .warning-banner ul {
+            margin: 8px 0 0 20px;
+            padding: 0;
+            font-size: 13px;
+        }
+        .warning-banner li {
+            margin: 4px 0;
+        }
+        
+        /* Confirmation Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 1000;
+            backdrop-filter: blur(4px);
+        }
+        .modal-overlay.show { display: flex; align-items: center; justify-content: center; }
+        .modal-content {
+            background: #fff;
+            border-radius: 8px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 2px solid #d32f2f;
+            background: #ffebee;
+        }
+        .modal-header h2 {
+            margin: 0;
+            color: #c62828;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .modal-body {
+            padding: 24px;
+        }
+        .modal-body p {
+            margin: 0 0 16px;
+            line-height: 1.6;
+        }
+        .modal-body strong {
+            color: #c62828;
+        }
+        .name-review {
+            background: #f5f5f5;
+            border: 2px solid var(--primary);
+            border-radius: 6px;
+            padding: 16px;
+            margin: 16px 0;
+            text-align: center;
+        }
+        .name-review .label {
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .name-review .name-display {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text);
+            margin: 8px 0;
+            font-family: 'Georgia', serif;
+        }
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+        .modal-btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .modal-btn.cancel {
+            background: #f5f5f5;
+            color: var(--text);
+        }
+        .modal-btn.cancel:hover {
+            background: #e0e0e0;
+        }
+        .modal-btn.confirm {
+            background: #2e7d32;
+            color: #fff;
+        }
+        .modal-btn.confirm:hover {
+            background: #1b5e20;
+        }
+        .modal-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
@@ -165,19 +320,14 @@
     <div class="login-container" style="margin: 24px auto;">
         <div class="login-header">
             <h1>🏆 Certificate System</h1>
-            <p>Enter your credentials to get your certificate</p>
+            <p>Enter your email to check certificate eligibility</p>
         </div>
         
         <div class="login-form">
             <form id="loginForm">
                 <div class="form-group">
-                    <label for="userName">Full Name</label>
-                    <input type="text" id="userName" name="userName" placeholder="Enter your full name" required>
-                </div>
-                
-                <div class="form-group">
                     <label for="userEmail">Email Address</label>
-                    <input type="email" id="userEmail" name="userEmail" placeholder="Enter your email address" required>
+                    <input type="email" id="userEmail" name="userEmail" placeholder="Enter your registered email" required>
                 </div>
                 
                 <button type="submit" class="submit-btn" id="submitBtn">
@@ -187,14 +337,51 @@
             
             <div class="loading" id="loading">
                 <div class="spinner"></div>
-                <p>Checking your credentials...</p>
+                <p>Checking your eligibility...</p>
             </div>
             
             <div class="message" id="message"></div>
             
+            <!-- Certificate Type Selection -->
+            <div class="reference-id" id="certificateTypeSection" style="display: none;">
+                <h3>✅ Email Verified!</h3>
+                <p>You are eligible for: <strong id="certificateTypeName"></strong></p>
+                
+                <!-- Scrolling Warning Banner -->
+                <div class="warning-banner" id="warningBanner">
+                    <div class="warning-title">
+                        <span class="warning-icon">⚠️</span>
+                        IMPORTANT: READ CAREFULLY BEFORE PROCEEDING
+                    </div>
+                    <div class="warning-text">
+                        <strong>Your certificate can be generated ONLY ONCE!</strong> Please ensure:
+                    </div>
+                    <ul>
+                        <li>✓ Enter your <strong>FULL NAME</strong> exactly as you want it on the certificate</li>
+                        <li>✓ Check for <strong>SPELLING ERRORS</strong> carefully</li>
+                        <li>✓ Use proper <strong>CAPITALIZATION</strong> (e.g., "John Smith" not "john smith")</li>
+                        <li>✓ You will be asked to <strong>CONFIRM TWICE</strong> before generation</li>
+                    </ul>
+                </div>
+                
+                <div class="form-group" style="margin-top: 20px;">
+                    <label for="fullName">Enter Your Full Name (Exactly as it should appear)</label>
+                    <input type="text" id="fullName" placeholder="e.g., Rajesh Kumar Sharma" required 
+                           oninput="validateNameInput()">
+                    <small style="color: var(--muted); font-size: 12px; margin-top: 4px; display: block;">
+                        💡 Tip: Use Title Case - first letter of each word capitalized
+                    </small>
+                </div>
+                
+                <button class="submit-btn" id="generateBtn" onclick="showConfirmationModal()" disabled>
+                    🎓 Proceed to Generate Certificate
+                </button>
+            </div>
+            
             <div class="reference-id" id="referenceIdSection">
                 <h3>🎉 Success! Your Certificate Number</h3>
                 <div class="id-display" id="referenceIdDisplay"></div>
+                <p><strong>Certificate Type:</strong> <span id="finalCertType"></span></p>
                 <p><strong>Important:</strong> Save this certificate number to download your certificate</p>
                 <button class="copy-btn" onclick="copyReferenceId()">📋 Copy Number</button>
                 <br>
@@ -204,6 +391,81 @@
         
         <div class="footer">
             <p>Need help? <a href="#" onclick="showHelp()">Contact Support</a></p>
+        </div>
+    </div>
+
+    <!-- First Confirmation Modal -->
+    <div class="modal-overlay" id="confirmationModal1">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>
+                    <span style="font-size: 28px;">⚠️</span>
+                    First Confirmation - Verify Your Name
+                </h2>
+            </div>
+            <div class="modal-body">
+                <p><strong>STEP 1 OF 2:</strong> Please review your name carefully.</p>
+                <p>This is how your name will appear on the certificate:</p>
+                
+                <div class="name-review">
+                    <div class="label">Certificate Name Preview</div>
+                    <div class="name-display" id="namePreview1"></div>
+                </div>
+                
+                <p style="color: #c62828;">
+                    <strong>⚠️ WARNING:</strong> Once generated, you <strong>CANNOT</strong> change your name or generate a new certificate!
+                </p>
+                
+                <p>Is this name <strong>CORRECT</strong> and <strong>SPELLED PROPERLY</strong>?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn cancel" onclick="closeConfirmationModal1()">
+                    ❌ No, Let Me Fix It
+                </button>
+                <button class="modal-btn confirm" onclick="showConfirmationModal2()">
+                    ✓ Yes, This is Correct
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Second Confirmation Modal -->
+    <div class="modal-overlay" id="confirmationModal2">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>
+                    <span style="font-size: 28px;">🔒</span>
+                    Final Confirmation - Last Chance!
+                </h2>
+            </div>
+            <div class="modal-body">
+                <p><strong>STEP 2 OF 2:</strong> This is your FINAL confirmation.</p>
+                
+                <div class="name-review">
+                    <div class="label">Final Certificate Name</div>
+                    <div class="name-display" id="namePreview2"></div>
+                </div>
+                
+                <p style="background: #fff3cd; border: 2px solid #ffc107; padding: 12px; border-radius: 6px;">
+                    <strong>🚨 FINAL WARNING:</strong><br>
+                    • Your certificate will be generated with this name<br>
+                    • This action <strong>CANNOT BE UNDONE</strong><br>
+                    • You will <strong>NOT BE ABLE</strong> to generate another certificate<br>
+                    • Make absolutely sure the spelling is correct
+                </p>
+                
+                <p style="text-align: center; font-size: 16px; margin-top: 16px;">
+                    <strong>Are you 100% sure you want to proceed?</strong>
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn cancel" onclick="closeConfirmationModal2()">
+                    ❌ Cancel & Go Back
+                </button>
+                <button class="modal-btn confirm" onclick="generateCertificate()">
+                    ✓ YES, Generate Certificate
+                </button>
+            </div>
         </div>
     </div>
 
@@ -235,29 +497,31 @@
             checkCredentials();
         });
 
+        let userEmail = '';
+        let certificateType = '';
+
         function checkCredentials() {
-            const userName = document.getElementById('userName').value.trim();
-            const userEmail = document.getElementById('userEmail').value.trim();
+            const email = document.getElementById('userEmail').value.trim();
             
-            if (!userName || !userEmail) {
-                showMessage('Please fill in all fields', 'error');
+            if (!email) {
+                showMessage('Please enter your email', 'error');
                 return;
             }
 
             // Show loading
             showLoading(true);
             hideMessage();
+            hideCertificateType();
             hideReferenceId();
 
-            // Call Node.js API for credential verification
+            // Call Node.js API for email verification
             fetch('/api/verify_credentials', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    name: userName,
-                    email: userEmail
+                    email: email
                 })
             })
             .then(response => response.json())
@@ -265,17 +529,76 @@
                 showLoading(false);
 
                 if (data.success) {
-                    const referenceId = data.reference_id;
-                    
-                    showReferenceId(referenceId);
+                    userEmail = email;
+                    certificateType = data.certificate_type;
                     
                     if (data.existing) {
-                        showMessage('✅ Welcome back! Your existing certificate number is displayed below. Created on: ' + new Date(data.created_date).toLocaleDateString(), 'success');
+                        // Certificate already generated
+                        showReferenceId(data.reference_id, data.certificate_type);
+                        showMessage('✅ Certificate already generated! Your certificate number is displayed below. Created on: ' + new Date(data.created_date).toLocaleDateString(), 'success');
                     } else {
-                        showMessage('✅ Credentials verified! Your new certificate number has been generated.', 'success');
+                        // Show name input for certificate generation
+                        showCertificateType(data.certificate_type);
+                        showMessage('✅ Email verified! Please enter your name to generate your certificate.', 'success');
                     }
                 } else {
-                    showMessage('❌ ' + (data.error || 'Credentials not found. Please check your name and email address.'), 'error');
+                    showMessage('❌ ' + (data.error || 'Email not found. You are not eligible for a certificate.'), 'error');
+                }
+            })
+            .catch(error => {
+                showLoading(false);
+                console.error('Error:', error);
+                showMessage('❌ Connection error. Please try again later.', 'error');
+            });
+        }
+
+        function generateCertificate() {
+            const fullName = document.getElementById('fullName').value.trim();
+            
+            if (!fullName) {
+                showMessage('Please enter your full name', 'error');
+                return;
+            }
+
+            // Close all modals
+            document.getElementById('confirmationModal2').classList.remove('show');
+            document.getElementById('confirmationModal1').classList.remove('show');
+
+            // Show loading
+            showLoading(true);
+            hideMessage();
+
+            // Call API to generate certificate
+            fetch('/api/generate_certificate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email: userEmail,
+                    name: fullName
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                showLoading(false);
+
+                if (data.success) {
+                    hideCertificateType();
+                    showReferenceId(data.reference_id, data.certificate_type);
+                    showMessage('🎉 Success! Your certificate has been generated with the name: ' + fullName, 'success');
+                    
+                    // Scroll to the reference ID section
+                    setTimeout(() => {
+                        document.getElementById('referenceIdSection').scrollIntoView({ 
+                            behavior: 'smooth', 
+                            block: 'center' 
+                        });
+                    }, 300);
+                } else if (data.existing) {
+                    showMessage('❌ Certificate already generated for this email. Reference ID: ' + data.reference_id, 'error');
+                } else {
+                    showMessage('❌ ' + (data.error || 'Failed to generate certificate.'), 'error');
                 }
             })
             .catch(error => {
@@ -311,10 +634,82 @@
             message.classList.remove('show');
         }
 
-        function showReferenceId(id) {
+        function showCertificateType(certType) {
+            const section = document.getElementById('certificateTypeSection');
+            const typeName = document.getElementById('certificateTypeName');
+            const warningBanner = document.getElementById('warningBanner');
+            typeName.textContent = certType + ' Certificate';
+            section.style.display = 'block';
+            
+            // Show scrolling warning banner after a short delay
+            setTimeout(() => {
+                warningBanner.classList.add('show');
+            }, 300);
+        }
+
+        function hideCertificateType() {
+            const section = document.getElementById('certificateTypeSection');
+            const warningBanner = document.getElementById('warningBanner');
+            section.style.display = 'none';
+            warningBanner.classList.remove('show');
+        }
+        
+        function validateNameInput() {
+            const fullName = document.getElementById('fullName').value.trim();
+            const generateBtn = document.getElementById('generateBtn');
+            
+            // Enable button only if name has at least 2 characters and contains letters
+            if (fullName.length >= 2 && /[a-zA-Z]/.test(fullName)) {
+                generateBtn.disabled = false;
+            } else {
+                generateBtn.disabled = true;
+            }
+        }
+        
+        function showConfirmationModal() {
+            const fullName = document.getElementById('fullName').value.trim();
+            
+            if (!fullName || fullName.length < 2) {
+                showMessage('⚠️ Please enter a valid name (at least 2 characters)', 'error');
+                return;
+            }
+            
+            // Set name in both preview modals
+            document.getElementById('namePreview1').textContent = fullName;
+            document.getElementById('namePreview2').textContent = fullName;
+            
+            // Show first confirmation modal
+            document.getElementById('confirmationModal1').classList.add('show');
+        }
+        
+        function closeConfirmationModal1() {
+            document.getElementById('confirmationModal1').classList.remove('show');
+            // Focus back on name input for editing
+            document.getElementById('fullName').focus();
+        }
+        
+        function showConfirmationModal2() {
+            // Close first modal
+            document.getElementById('confirmationModal1').classList.remove('show');
+            
+            // Show second confirmation modal after brief delay
+            setTimeout(() => {
+                document.getElementById('confirmationModal2').classList.add('show');
+            }, 200);
+        }
+        
+        function closeConfirmationModal2() {
+            document.getElementById('confirmationModal2').classList.remove('show');
+            // Focus back on name input for editing
+            document.getElementById('fullName').focus();
+        }
+
+        function showReferenceId(id, certType) {
             const section = document.getElementById('referenceIdSection');
             const display = document.getElementById('referenceIdDisplay');
+            const certTypeDisplay = document.getElementById('finalCertType');
             display.textContent = id;
+            certTypeDisplay.textContent = certType + ' Certificate';
             section.classList.add('show');
         }
 
