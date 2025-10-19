@@ -28,7 +28,31 @@
         /* Navbar (shared) */
         .navbar { background: #fff; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
         .nav-container { max-width: 1100px; margin: 0 auto; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; }
-        .logo { color: var(--text); text-decoration: none; font-weight: 500; }
+        .logo { 
+            color: var(--text); 
+            text-decoration: none; 
+            font-weight: 500; 
+            display: flex; 
+            align-items: center; 
+            gap: 12px;
+        }
+        .logo-img {
+            height: 40px;
+            width: auto;
+            object-fit: contain;
+        }
+        .logo-text {
+            font-size: 16px;
+            font-weight: 500;
+        }
+        @media (max-width: 480px) {
+            .logo-text {
+                display: none;
+            }
+            .logo-img {
+                height: 35px;
+            }
+        }
         .nav-links { display: flex; gap: 8px; }
         .nav-links a { color: var(--text); text-decoration: none; padding: 8px 12px; border-radius: 4px; }
         .nav-links a:hover { background: #f1f3f4; }
@@ -140,7 +164,43 @@
         .copy-btn:hover { background: #1669c1; }
         .download-link { display: inline-block; margin-top: 12px; padding: 10px 16px; border: 1px solid var(--border); border-radius: 4px; color: var(--primary); text-decoration: none; font-weight: 500; }
         .download-link:hover { background: #f6f9fe; border-color: #c6dafc; }
-        .footer { text-align: center; padding: 16px; color: var(--muted); border-top: 1px solid var(--border); background: #fff; }
+        .footer { 
+            text-align: center; 
+            padding: 32px 16px 24px; 
+            color: var(--muted); 
+            border-top: 1px solid var(--border); 
+            background: #fff; 
+        }
+        .footer-logo {
+            width: 150px;
+            height: auto;
+            margin: 0 auto 16px;
+            display: block;
+            opacity: 0.9;
+        }
+        .footer-tagline {
+            font-size: 14px;
+            color: var(--text);
+            font-weight: 500;
+            margin: 12px 0;
+            letter-spacing: 0.5px;
+        }
+        @media (max-width: 768px) {
+            .footer-logo {
+                width: 120px;
+            }
+            .footer-tagline {
+                font-size: 13px;
+            }
+        }
+        @media (max-width: 480px) {
+            .footer-logo {
+                width: 100px;
+            }
+            .footer-tagline {
+                font-size: 12px;
+            }
+        }
         .footer a { color: var(--primary); text-decoration: none; }
         .footer a:hover { text-decoration: underline; }
         
@@ -303,7 +363,10 @@
 <body>
     <nav class="navbar">
         <div class="nav-container">
-            <a href="index.html" class="logo">🏆 Certificate System</a>
+            <a href="index.html" class="logo">
+                <img src="csimkitos-logo.png" alt="CSI MKITOS Logo" class="logo-img">
+                <span class="logo-text">🏆 Certificate System</span>
+            </a>
             <div class="nav-links" id="navLinks">
                 <a href="login.html">Student Login</a>
                 <a href="download_certificate.html">Download</a>
@@ -390,6 +453,8 @@
         </div>
         
         <div class="footer">
+            <img src="csimkitos-logo.png" alt="CSI MKITOS Logo" class="footer-logo">
+            <div class="footer-tagline">Proudly After The Dot</div>
             <p>Need help? <a href="#" onclick="showHelp()">Contact Support</a></p>
         </div>
     </div>

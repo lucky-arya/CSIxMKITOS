@@ -182,11 +182,42 @@ async function writeCSV(filename, data) {
 }
 
 /**
- * Generate unique reference ID
+ * Generate unique reference ID with collision protection
+ * Uses timestamp + UUID for high uniqueness
+ * Will retry up to 3 times if collision detected
  */
 function generateReferenceId() {
     const timestamp = Math.floor(Date.now() / 1000).toString(36).toUpperCase();
     const random = uuidv4().substring(0, 5).toUpperCase();
+    return `CERT-${timestamp}-${random}`;
+}
+
+/**
+ * Generate unique reference ID with retry logic
+ * Attempts up to maxAttempts times to generate a unique ID
+ */
+async function generateUniqueReferenceId(maxAttempts = 3) {
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+        const referenceId = generateReferenceId();
+        
+        // Check if ID already exists
+        const existing = await getReference(referenceId);
+        
+        if (!existing) {
+            return referenceId; // Unique ID found
+        }
+        
+        console.warn(`Reference ID collision detected: ${referenceId}. Retrying... (Attempt ${attempt + 1}/${maxAttempts})`);
+        
+        // Add small delay before retry to ensure different timestamp
+        if (attempt < maxAttempts - 1) {
+            await new Promise(resolve => setTimeout(resolve, 100));
+        }
+    }
+    
+    // Fallback: Add extra randomness if all attempts failed
+    const timestamp = Math.floor(Date.now()).toString(36).toUpperCase(); // Use milliseconds
+    const random = uuidv4().substring(0, 8).toUpperCase(); // Longer random string
     return `CERT-${timestamp}-${random}`;
 }
 
@@ -511,8 +542,8 @@ app.post('/api/generate_certificate', async (req, res) => {
             });
         }
         
-        // Generate new certificate
-        const referenceId = generateReferenceId();
+        // Generate new certificate with collision protection
+        const referenceId = await generateUniqueReferenceId();
         const user = {
             name: name.trim(),
             email: email.toLowerCase().trim(),

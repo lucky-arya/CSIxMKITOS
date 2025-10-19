@@ -6,7 +6,7 @@
     <title>Certificate System - Home</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Qwitcher+Grypen:wght@400;700&display=swap" rel="stylesheet">
     <style>
         :root {
             --bg: #f8f9fa;
@@ -30,7 +30,31 @@
             position: sticky; top: 0; z-index: 100;
         }
         .nav-container { max-width: 1100px; margin: 0 auto; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; }
-        .logo { color: var(--text); text-decoration: none; font-weight: 500; }
+        .logo { 
+            color: var(--text); 
+            text-decoration: none; 
+            font-weight: 500; 
+            display: flex; 
+            align-items: center; 
+            gap: 12px;
+        }
+        .logo-img {
+            height: 40px;
+            width: auto;
+            object-fit: contain;
+        }
+        .logo-text {
+            font-size: 16px;
+            font-weight: 500;
+        }
+        @media (max-width: 480px) {
+            .logo-text {
+                display: none;
+            }
+            .logo-img {
+                height: 35px;
+            }
+        }
         .nav-links { display: flex; gap: 8px; }
         .nav-links a { color: var(--text); text-decoration: none; padding: 8px 12px; border-radius: 4px; }
         .nav-links a:hover { background: #f1f3f4; }
@@ -58,9 +82,123 @@
             .hamburger { display: flex; }
             .nav-container { position: relative; }
         }
-        .hero { text-align: center; padding: 56px 16px; }
-        .hero h1 { margin: 0 0 8px; font-size: 32px; font-weight: 500; }
-        .hero p { margin: 0; color: var(--muted); font-size: 16px; }
+        .hero { 
+            text-align: center; 
+            padding: 64px 16px 48px; 
+            background: #ffffff;
+            color: #333333;
+        }
+        .hero-logo {
+            width: auto;
+            height: auto;
+            margin: 0 auto 32px;
+            display: block;
+        }
+        @media (max-width: 768px) {
+            .hero-logo {
+                width: 160px;
+            }
+        }
+        .hero-title {
+            font-size: 72px;
+            font-weight: 900;
+            letter-spacing: 8px;
+            margin: 32px 0;
+            color: #1a1a1a;
+            text-transform: uppercase;
+            font-family: 'Impact', 'Arial Black', sans-serif;
+            line-height: 1;
+            text-shadow: 2px 2px 0px rgba(0,0,0,0.1);
+        }
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 48px;
+                letter-spacing: 4px;
+            }
+        }
+        @media (max-width: 480px) {
+            .hero-title {
+                font-size: 32px;
+                letter-spacing: 2px;
+            }
+        }
+        .hero h1 { 
+            margin: 32px 0 16px; 
+            font-size: 36px; 
+            font-weight: 600; 
+            color: #2c3e50;
+            letter-spacing: 0;
+        }
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 28px;
+            }
+        }
+        .hero h2 { 
+            margin: 0 0 32px; 
+            font-size: 22px; 
+            font-weight: 600;
+            color: #34495e;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        @media (max-width: 768px) {
+            .hero h2 {
+                font-size: 18px;
+            }
+        }
+        .hero p { 
+            margin: 0 auto 16px; 
+            max-width: 800px;
+            color: #555555;
+            font-size: 16px; 
+            line-height: 1.8;
+            text-align: left;
+            padding: 0 20px;
+        }
+        .hero ul {
+            text-align: left;
+            max-width: 800px;
+            margin: 24px auto;
+            padding: 0 20px;
+            list-style: none;
+        }
+        .hero ul li {
+            margin: 16px 0;
+            padding-left: 32px;
+            position: relative;
+            color: #444444;
+            line-height: 1.7;
+            font-size: 16px;
+        }
+        .hero ul li:before {
+            content: "•";
+            position: absolute;
+            left: 8px;
+            font-weight: bold;
+            color: #000000;
+            font-size: 20px;
+        }
+        .hero ul li strong {
+            color: #000000;
+            font-weight: 700;
+        }
+        .hero .warning-note {
+            max-width: 800px;
+            margin: 32px auto 0;
+            padding: 20px 24px;
+            background: #fff3cd;
+            border: 2px solid #ffc107;
+            border-left: 6px solid #ff6b00;
+            border-radius: 8px;
+            color: #856404;
+            font-weight: 500;
+            text-align: left;
+            line-height: 1.7;
+        }
+        .hero .warning-note strong {
+            color: #d32f2f;
+        }
         .features { max-width: 1100px; margin: 0 auto; padding: 24px 16px 48px; display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; }
         .feature-card { background: #fff; border: 1px solid var(--border); border-radius: 8px; padding: 20px; text-align: left; }
         .feature-icon { font-size: 28px; margin-bottom: 8px; }
@@ -70,7 +208,47 @@
         .cta-button:hover { background: var(--primary-hover); }
         .cta-button.secondary { background: #188038; }
         .cta-button.secondary:hover { background: #146c31; }
-        .footer { background: #fff; color: var(--muted); text-align: center; padding: 24px 16px; border-top: 1px solid var(--border); }
+        .footer { 
+            background: #fff; 
+            color: var(--muted); 
+            text-align: center; 
+            padding: 32px 16px 24px; 
+            border-top: 1px solid var(--border); 
+        }
+        .footer-logo {
+            width: 150px;
+            height: auto;
+            margin: 0 auto 16px;
+            display: block;
+            opacity: 0.9;
+        }
+        .footer-tagline {
+            font-size: 14px;
+            color: var(--text);
+            font-weight: 500;
+            margin: 12px 0;
+            letter-spacing: 0.5px;
+        }
+        .footer-content p {
+            margin: 8px 0;
+            font-size: 13px;
+        }
+        @media (max-width: 768px) {
+            .footer-logo {
+                width: 120px;
+            }
+            .footer-tagline {
+                font-size: 13px;
+            }
+        }
+        @media (max-width: 480px) {
+            .footer-logo {
+                width: 100px;
+            }
+            .footer-tagline {
+                font-size: 12px;
+            }
+        }
         .footer-links { display: flex; justify-content: center; gap: 12px; margin: 8px 0 12px; }
         .footer-links a { color: var(--text); text-decoration: none; padding: 6px 8px; border-radius: 4px; }
         .footer-links a:hover { background: #f1f3f4; }
@@ -83,7 +261,9 @@
 <body>
     <nav class="navbar">
         <div class="nav-container">
-            <a href="#" class="logo">🏆 Certificate System</a>
+            <a href="#" class="logo">
+                <img src="csimkitos-logo.png" alt="CSI MKITOS Logo" class="logo-img">
+            </a>
             <div class="nav-links" id="navLinks">
                 <a href="login.html">Student Login</a>
                 <a href="download_certificate.html">Download</a>
@@ -98,8 +278,26 @@
     </nav>
 
     <section class="hero">
-        <h1>Digital Certificate System</h1>
-        <p>Secure, automated certificate generation and distribution</p>
+        <img src="csimkitos-logo.png" alt="CSI MKITOS Logo" class="hero-logo">
+        <h1>Certificate Eligibility Checker</h1>
+        <h2>CSI & MKITOS CTRL. ALT. ACT.</h2>
+
+        <p>
+            Use this tool to check if you're eligible for a certificate. There are two certificate categories:
+        </p>
+
+        <ul>
+            <li><strong>Achievers Certificate:</strong> For participants who completed all assignments, quizzes, and submitted the OSINT Lab.</li>
+            <li><strong>Completion Certificate:</strong> For those who completed at least <strong>3 quizzes</strong> and <strong>3 assignments</strong> and submitted the final quiz.</li>
+        </ul>
+
+        <p>
+            If eligible, you'll be redirected to the download portal. Please enter your name <strong>carefully</strong> there. Only <strong>one certificate</strong> will be issued per email.
+        </p>
+
+        <p class="warning-note">
+            ⚠️ <strong>Note:</strong> If you are listed as <strong>Achievers</strong>, you will <u>not</u> be given a Completion Certificate. Only the highest certificate is awarded.
+        </p>
     </section>
 
     <section class="features">
@@ -135,8 +333,9 @@
 
     <footer class="footer">
         <div class="footer-content">
+            <img src="csimkitos-logo.png" alt="CSI MKITOS Logo" class="footer-logo">
+            <div class="footer-tagline">Proudly After The Dot</div>
             <p>© 2025 Certificate System</p>
-            <p style="margin-top: 6px; font-size: 12px;">Email verification · MongoDB storage · Dynamic certificate templates · PNG/PDF export</p>
         </div>
     </footer>
 

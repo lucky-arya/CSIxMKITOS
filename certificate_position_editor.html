@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Certificate Position Editor - Drag & Drop Tool</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Sacramento&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Qwitcher+Grypen:wght@400;700&display=swap');
         @font-face {
             font-family: 'Canva Sans';
             src: local('Arial'), local('Helvetica'), local('sans-serif');
@@ -16,7 +16,31 @@
     /* Navbar (shared) */
     .navbar { background: #fff; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
     .nav-container { max-width: 1100px; margin: 0 auto; padding: 12px 16px; display: flex; align-items: center; justify-content: space-between; }
-    .logo { color: var(--text); text-decoration: none; font-weight: 500; }
+    .logo { 
+        color: var(--text); 
+        text-decoration: none; 
+        font-weight: 500; 
+        display: flex; 
+        align-items: center; 
+        gap: 12px;
+    }
+    .logo-img {
+        height: 40px;
+        width: auto;
+        object-fit: contain;
+    }
+    .logo-text {
+        font-size: 16px;
+        font-weight: 500;
+    }
+    @media (max-width: 480px) {
+        .logo-text {
+            display: none;
+        }
+        .logo-img {
+            height: 35px;
+        }
+    }
     .nav-links { display: flex; gap: 8px; }
     .nav-links a { color: var(--text); text-decoration: none; padding: 8px 12px; border-radius: 4px; }
     .nav-links a:hover { background: #f1f3f4; }
@@ -196,7 +220,10 @@
 <body>
     <nav class="navbar">
         <div class="nav-container">
-            <a href="index.html" class="logo">🏆 Certificate System</a>
+            <a href="index.html" class="logo">
+                <img src="csimkitos-logo.png" alt="CSI MKITOS Logo" class="logo-img">
+                <span class="logo-text">🏆 Certificate System</span>
+            </a>
             <div class="nav-links" id="navLinks">
                 <a href="login.html">Student Login</a>
                 <a href="download_certificate.html">Download</a>
@@ -270,7 +297,7 @@
                     CERT-2025-001
                 </div>
                 
-                <div class="draggable-text" id="dragName" data-field="studentName" style="left: 300px; top: 380px; font-size: 52.6px; font-family: 'Sacramento', cursive; color: #181818; font-weight: normal;">
+                <div class="draggable-text" id="dragName" data-field="studentName" style="left: 300px; top: 380px; font-size: 70px; font-family: 'Qwitcher Grypen', cursive; color: #181818; font-weight: normal;">
                     John Doe
                 </div>
             </div>
