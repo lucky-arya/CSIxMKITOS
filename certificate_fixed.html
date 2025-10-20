@@ -199,36 +199,41 @@
         function generateCertificate() {
             const img = new Image();
             img.onload = function() {
-                // Clear canvas
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                
-                // Draw background image scaled to A4 landscape
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                
-                // Get form values
-                const data = {
-                    certificateId: document.getElementById('certificateId').value || 'CERT-2025-001',
-                    studentName: document.getElementById('studentName').value || 'John Doe'
-                };
-                
-                // Set font properties
-                ctx.textAlign = 'center';
+                // Wait for fonts to load before rendering
+                document.fonts.ready.then(function() {
+                    // Clear canvas
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    
+                    // Draw background image scaled to A4 landscape
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    
+                    // Get form values
+                    const data = {
+                        certificateId: document.getElementById('certificateId').value || 'CERT-2025-001',
+                        studentName: document.getElementById('studentName').value || 'John Doe'
+                    };
+                    
+                    // Set font properties
+                    ctx.textAlign = 'center';
 
-                // Certificate Number (Canva Sans style, smaller size, dark color)
-                ctx.fillStyle = '#181818';
-                ctx.font = '18px "Canva Sans", Arial, sans-serif';
-                ctx.fillText(data.certificateId, textCoordinates.certificateId.x, textCoordinates.certificateId.y);
-                
-                // Student Name (Qwitcher Grypen font, larger size, darker color)
-                ctx.fillStyle = '#181818';
-                ctx.font = '70px "Qwitcher Grypen"';
-                ctx.fillText(data.studentName, textCoordinates.studentName.x, textCoordinates.studentName.y);
-                
-                certificateGenerated = true;
-                document.getElementById('downloadPNGBtn').disabled = false;
-                document.getElementById('downloadPDFBtn').disabled = false;
-                
-                showStatus('✅ Certificate generated successfully! Ready for download.');
+                    // Certificate Number (Canva Sans style, smaller size, dark color)
+                    ctx.fillStyle = '#181818';
+                    ctx.font = '18px "Canva Sans", Arial, sans-serif';
+                    ctx.fillText(data.certificateId, textCoordinates.certificateId.x, textCoordinates.certificateId.y);
+                    
+                    // Student Name (Qwitcher Grypen font with fallbacks, larger size, darker color)
+                    ctx.fillStyle = '#181818';
+                    ctx.font = '70px "Qwitcher Grypen", "Brush Script MT"';
+                    ctx.fillText(data.studentName, textCoordinates.studentName.x, textCoordinates.studentName.y);
+                    
+                    certificateGenerated = true;
+                    document.getElementById('downloadPNGBtn').disabled = false;
+                    document.getElementById('downloadPDFBtn').disabled = false;
+                    
+                    showStatus('✅ Certificate generated successfully! Ready for download.');
+                }).catch(function() {
+                    console.warn('Font loading timed out, using fallback');
+                });
             };
             
             img.onerror = function() {

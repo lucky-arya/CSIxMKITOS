@@ -297,7 +297,7 @@
                     CERT-2025-001
                 </div>
                 
-                <div class="draggable-text" id="dragName" data-field="studentName" style="left: 300px; top: 380px; font-size: 70px; font-family: 'Qwitcher Grypen', cursive; color: #181818; font-weight: normal;">
+                <div class="draggable-text" id="dragName" data-field="studentName" style="left: 300px; top: 380px; font-size: 70px; font-family: 'Qwitcher Grypen', 'Brush Script MT', cursive, serif; color: #181818; font-weight: normal;">
                     John Doe
                 </div>
             </div>
@@ -353,14 +353,19 @@
         function loadCertificate() {
             const img = new Image();
             img.onload = function() {
-                // Clear canvas
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                
-                // Draw background image scaled to A4 landscape
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                
-                showStatus('✅ Certificate background loaded! Drag the text boxes to position them.');
-                updateTextContent();
+                // Wait for fonts to load before rendering
+                document.fonts.ready.then(function() {
+                    // Clear canvas
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    
+                    // Draw background image scaled to A4 landscape
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                    
+                    showStatus('✅ Certificate background loaded! Drag the text boxes to position them.');
+                    updateTextContent();
+                }).catch(function() {
+                    console.warn('Font loading timed out, using fallback');
+                });
             };
             
             img.onerror = function() {

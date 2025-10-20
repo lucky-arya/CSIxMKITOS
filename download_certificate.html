@@ -362,9 +362,11 @@
             
             const img = new Image();
             img.onload = function() {
-                // Clear and draw background
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                // Wait for fonts to load before drawing
+                document.fonts.ready.then(function() {
+                    // Clear and draw background
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                 
                 // Text coordinates (adjust these based on your certificate design)
                 const textCoordinates = {
@@ -380,9 +382,9 @@
                 ctx.font = '18px "Canva Sans", Arial, sans-serif';
                 ctx.fillText(data.id, textCoordinates.certificateId.x, textCoordinates.certificateId.y);
                 
-                // Student Name (Qwitcher Grypen font, larger size, darker color)
+                // Student Name (Qwitcher Grypen font with fallbacks, larger size, darker color)
                 ctx.fillStyle = '#181818';
-                ctx.font = '80px "Qwitcher Grypen", cursive';
+                ctx.font = '80px "Qwitcher Grypen", "Brush Script MT"';
                 ctx.fillText(user.name, textCoordinates.studentName.x, textCoordinates.studentName.y);
                 
                 // Show certificate type
@@ -391,9 +393,13 @@
                     certTypeLabel.textContent = `Certificate Type: ${certificateType}`;
                 }
                 
-                // Show preview and download controls
-                document.getElementById('certificatePreview').classList.add('show');
-                document.getElementById('downloadControls').classList.add('show');
+                    // Show preview and download controls
+                    document.getElementById('certificatePreview').classList.add('show');
+                    document.getElementById('downloadControls').classList.add('show');
+                }).catch(function() {
+                    // Fallback if font loading fails
+                    console.warn('Font loading timed out, using fallback');
+                });
             };
             
             img.onerror = function() {
