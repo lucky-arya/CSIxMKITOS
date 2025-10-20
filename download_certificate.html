@@ -89,6 +89,7 @@
         .loading.show { display: block; }
         .spinner { border: 3px solid #f1f3f4; border-top: 3px solid var(--primary); border-radius: 50%; width: 24px; height: 24px; animation: spin 1s linear infinite; margin: 0 auto 8px; }
         @keyframes spin { from {transform: rotate(0)} to {transform: rotate(360deg)} }
+        .loading-stage { margin-top: 8px; font-size: 13px; color: var(--primary); font-weight: 500; }
         .message { display: none; padding: 12px; border: 1px solid var(--border); border-radius: 6px; margin: 16px 0; font-size: 14px; text-align: center; }
         .message.show { display: block; }
         .message.success { border-color:#c8e6c9; background:#f1f8e9; color:#1b5e20; }
@@ -190,6 +191,7 @@
             <div class="loading" id="loading">
                 <div class="spinner"></div>
                 <p>Verifying your certificate number...</p>
+                <div class="loading-stage" id="loadingStage"></div>
             </div>
             
             <div class="message" id="message"></div>
@@ -279,19 +281,22 @@
             showLoading(true);
             hideMessage();
             hideCertificateDetails();
+            
+            // Hide preview and download controls until ready
+            document.getElementById('certificatePreview').classList.remove('show');
+            document.getElementById('downloadControls').classList.remove('show');
 
             // Call Node.js API to verify reference ID
             fetch(`/api/get_certificate?reference_id=${encodeURIComponent(referenceId)}`)
             .then(response => response.json())
             .then(data => {
-                showLoading(false);
-
                 if (data.success) {
                     currentCertificateData = data.data;
                     showCertificateDetails(data.data);
                     generateCertificatePreview(data.data);
                     showMessage('✅ Certificate number verified! Your certificate is ready to download.', 'success');
                 } else {
+                    showLoading(false);
                     showMessage('❌ ' + (data.error || 'Invalid certificate number. Please check and try again.'), 'error');
                 }
             })
@@ -361,10 +366,26 @@
                 certificateImage = 'Achiever_Certificate.jpg';
             }
             
+            // Show loading stage
+            const loadingStage = document.getElementById('loadingStage');
+            if (loadingStage) {
+                loadingStage.textContent = `Loading certificate template: ${certificateImage}`;
+            }
+            
             const img = new Image();
             img.onload = function() {
+                // Update loading stage
+                if (loadingStage) {
+                    loadingStage.textContent = 'Loading fonts...';
+                }
+                
                 // Wait for fonts to load before drawing
                 document.fonts.ready.then(function() {
+                    // Update loading stage
+                    if (loadingStage) {
+                        loadingStage.textContent = 'Rendering certificate...';
+                    }
+                    
                     // Clear and draw background
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
@@ -394,18 +415,33 @@
                     certTypeLabel.textContent = `Certificate Type: ${certificateType}`;
                 }
                 
+                    // Hide loading stage
+                    if (loadingStage) {
+                        loadingStage.textContent = '';
+                    }
+                    
+                    // Hide loading spinner
+                    showLoading(false);
+                    
                     // Show preview and download controls
                     document.getElementById('certificatePreview').classList.add('show');
                     document.getElementById('downloadControls').classList.add('show');
                 }).catch(function() {
                     // Fallback if font loading fails
                     console.warn('Font loading timed out, using fallback');
+                    if (loadingStage) {
+                        loadingStage.textContent = '';
+                    }
+                    showLoading(false);
                 });
             };
             
             img.onerror = function() {
                 showMessage('⚠️ Certificate template not found. Please contact administrator.', 'error');
                 console.error('Failed to load certificate image:', certificateImage);
+                if (loadingStage) {
+                    loadingStage.textContent = '';
+                }
                 // Try fallback
                 if (certificateImage.includes('Achiever')) {
                     console.log('Trying fallback to Completion certificate...');
