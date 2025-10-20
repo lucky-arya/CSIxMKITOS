@@ -114,7 +114,6 @@
             <div class="nav-links" id="navLinks">
                 <a href="login.html">Student Login</a>
                 <a href="download_certificate.html">Download</a>
-                <a href="admin.html">Admin Tools</a>
             </div>
             <div class="hamburger" id="hamburger">
                 <span></span>
@@ -125,7 +124,7 @@
     </nav>
 
     <!-- Admin Dashboard -->
-    <div class="admin-container authenticated" id="adminContainer">
+    <div class="admin-container" id="adminContainer">
         
         <div class="admin-header">
             <div style="display:flex; justify-content: space-between; align-items: center;">
@@ -245,6 +244,9 @@
                     window.location.href = '/admin-login.html';
                     return;
                 }
+                // Only show admin container and load stats after authentication confirmed
+                document.getElementById('adminContainer').classList.add('authenticated');
+                loadStatistics();
             } catch (e) {
                 window.location.href = '/admin-login.html';
                 return;
@@ -368,12 +370,6 @@ Last Updated: ${new Date().toLocaleString()}`;
             a.click();
             URL.revokeObjectURL(url);
         }
-
-        // Load stats after auth check
-        window.addEventListener('load', () => {
-            // already checked auth at top; now load stats
-            loadStatistics();
-        });
     </script>
 </body>
 </html>
