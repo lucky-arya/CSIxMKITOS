@@ -223,9 +223,22 @@
                     ctx.font = '18px "Canva Sans", Arial, sans-serif';
                     ctx.fillText(data.certificateId, textCoordinates.certificateId.x, textCoordinates.certificateId.y);
                     
-                    // Student Name (Qwitcher Grypen font only - weight 700 for consistency)
+                    // Student Name (Qwitcher Grypen font with dynamic sizing)
                     ctx.fillStyle = '#181818';
-                    ctx.font = '700 70px "Qwitcher Grypen"';
+                    
+                    // Calculate font size based on name length
+                    let fontSize = 70; // Default size
+                    const nameLength = data.studentName.length;
+                    
+                    if (nameLength > 25) {
+                        fontSize = 45; // Very long names
+                    } else if (nameLength > 18) {
+                        fontSize = 55; // Long names
+                    } else if (nameLength > 15) {
+                        fontSize = 62; // Medium-long names
+                    }
+                    
+                    ctx.font = `700 ${fontSize}px "Qwitcher Grypen"`;
                     ctx.fillText(data.studentName, textCoordinates.studentName.x, textCoordinates.studentName.y);
                     
                     certificateGenerated = true;
