@@ -226,9 +226,16 @@
                     // Student Name (Qwitcher Grypen font with dynamic sizing)
                     ctx.fillStyle = '#181818';
                     
+                    // Convert name to proper case (Title Case)
+                    const properCaseName = data.studentName
+                        .toLowerCase()
+                        .split(' ')
+                        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                        .join(' ');
+                    
                     // Calculate font size based on name length
                     let fontSize = 70; // Default size
-                    const nameLength = data.studentName.length;
+                    const nameLength = properCaseName.length;
                     
                     if (nameLength > 25) {
                         fontSize = 45; // Very long names
@@ -239,7 +246,7 @@
                     }
                     
                     ctx.font = `700 ${fontSize}px "Qwitcher Grypen"`;
-                    ctx.fillText(data.studentName, textCoordinates.studentName.x, textCoordinates.studentName.y);
+                    ctx.fillText(properCaseName, textCoordinates.studentName.x, textCoordinates.studentName.y);
                     
                     certificateGenerated = true;
                     document.getElementById('downloadPNGBtn').disabled = false;
