@@ -6,7 +6,8 @@
     <title>CSIxMKITOS-#OSINTforGood</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Qwitcher+Grypen:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Qwitcher+Grypen:wght@700&display=block" rel="stylesheet">
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Qwitcher+Grypen:wght@700&display=block" as="style">
     <style>
         @font-face {
             font-family: 'Canva Sans';
@@ -382,9 +383,9 @@
                 ctx.font = '18px "Canva Sans", Arial, sans-serif';
                 ctx.fillText(data.id, textCoordinates.certificateId.x, textCoordinates.certificateId.y);
                 
-                // Student Name (Qwitcher Grypen font with fallbacks, larger size, darker color)
+                // Student Name (Qwitcher Grypen font only - weight 700 for consistency)
                 ctx.fillStyle = '#181818';
-                ctx.font = '80px "Qwitcher Grypen", "Brush Script MT"';
+                ctx.font = '700 80px "Qwitcher Grypen"';
                 ctx.fillText(user.name, textCoordinates.studentName.x, textCoordinates.studentName.y);
                 
                 // Show certificate type
