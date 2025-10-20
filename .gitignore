@@ -1,6 +1,9 @@
 # Environment variables
 .env
 
+# Secret admin access documentation
+SECRET_ADMIN_ACCESS.md
+
 # Node modules
 node_modules/
 

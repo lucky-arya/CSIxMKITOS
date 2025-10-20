@@ -33,7 +33,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Admin Login</title>
+      <title>Secure Access Portal</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
@@ -94,7 +94,7 @@
       <div class="nav-links" id="navLinks">
         <a href="login.html">Student Login</a>
         <a href="download_certificate.html">Download</a>
-        <a href="admin.html">Admin Tools</a>
+        <a href="management-dashboard.html">Management Portal</a>
       </div>
       <div class="hamburger" id="hamburger">
         <span></span>
@@ -148,7 +148,7 @@
         body: JSON.stringify({ username, password })
       });
       if (res.ok) {
-        location.href = '/admin';
+        location.href = '/management-dashboard.html';
       } else {
         const msg = document.getElementById('msg');
         msg.textContent = 'Invalid credentials';
